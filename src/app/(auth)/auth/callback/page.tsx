@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-export default function AuthCallbackPage() {
+function CallbackHandler() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -25,11 +25,18 @@ export default function AuthCallbackPage() {
     })
   }, [searchParams, router])
 
+  return null
+}
+
+export default function AuthCallbackPage() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
       background: 'linear-gradient(135deg, #FFE8F1 0%, #FFF5F7 100%)',
     }}>
+      <Suspense>
+        <CallbackHandler />
+      </Suspense>
       <p style={{ color: '#FF6B9D', fontWeight: 600, fontSize: 15 }}>Entrando...</p>
     </div>
   )
