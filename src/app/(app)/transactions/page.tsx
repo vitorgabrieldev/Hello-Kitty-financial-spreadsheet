@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button, Select, Tag, Skeleton, App } from 'antd'
+import { Tag, Skeleton, App } from 'antd'
 import { Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import dayjs from 'dayjs'
@@ -20,6 +20,7 @@ export default function TransactionsPage() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'income' | 'expense'>('all')
   const { message, modal } = App.useApp()
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [currentMonth, typeFilter])
 
   async function load() {
