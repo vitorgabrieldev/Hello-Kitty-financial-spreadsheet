@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Button, Drawer, Form, Input, Select, InputNumber, App, Skeleton } from 'antd'
-import { Plus, CreditCard, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, getCardBrandLabel } from '@/lib/utils'
 import PageHeader from '@/components/ui/PageHeader'

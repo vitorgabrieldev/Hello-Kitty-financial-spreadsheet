@@ -22,6 +22,7 @@ export default function NewTransactionPage() {
   const { message } = App.useApp()
   const router = useRouter()
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadSelects()
     form.setFieldsValue({ date: dayjs(), type: 'expense' })

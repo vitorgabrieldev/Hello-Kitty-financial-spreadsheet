@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Button, Skeleton } from 'antd'
-import { Bell, BellOff, CheckCheck } from 'lucide-react'
+import { BellOff, CheckCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/ui/PageHeader'
 import type { Notification } from '@/types'

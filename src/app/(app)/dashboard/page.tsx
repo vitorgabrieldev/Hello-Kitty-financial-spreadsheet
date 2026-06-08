@@ -51,7 +51,6 @@ export default function DashboardPage() {
   const totalBalance = accounts.reduce((s, a) => s + a.balance, 0)
   const monthIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
   const monthExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
-  const totalCardBalance = cards.reduce((s, c) => s + c.current_balance, 0)
 
   if (loading) {
     return (
