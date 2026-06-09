@@ -7,6 +7,7 @@ import ptBR from 'antd/locale/pt_BR'
 import { useEffect, useState } from 'react'
 import { ThemeProvider, useTheme } from '@/lib/theme-context'
 import { DEFAULT_THEME_ID, getTheme } from '@/lib/themes'
+import { UserProvider } from '@/lib/user-context'
 
 const defaultAntd = getTheme(DEFAULT_THEME_ID).antd
 
@@ -28,7 +29,9 @@ function AntdProviders({ children }: { children: React.ReactNode }) {
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
-      <AntdProviders>{children}</AntdProviders>
+      <UserProvider>
+        <AntdProviders>{children}</AntdProviders>
+      </UserProvider>
     </ThemeProvider>
   )
 }

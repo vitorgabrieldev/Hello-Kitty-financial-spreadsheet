@@ -1,13 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Card } from 'antd'
+import { useCallback, useEffect, useState } from 'react'
+import { App, Card } from 'antd'
 import { TrendingUp, TrendingDown, Wallet, Bell, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDateShort, getCurrentMonthRange } from '@/lib/utils'
 import { useNavigation } from '@/lib/navigation-context'
 import { useTheme } from '@/lib/theme-context'
+import { useUser } from '@/lib/user-context'
+import PullToRefresh from '@/components/ui/PullToRefresh'
 import type { Transaction, Notification, Account, Card as CardType, Profile, Debt } from '@/types'
 
 export default function DashboardPage() {
@@ -21,16 +23,12 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const { startNav } = useNavigation()
   const { theme } = useTheme()
+  const { user } = useUser()
+  const { message } = App.useApp()
 
-  useEffect(() => {
-    loadDashboard()
-  }, [])
-
-  async function loadDashboard() {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+  const loadDashboard = useCallback(async () => {
     if (!user) return
-
+    const supabase = createClient()
     const { start, end } = getCurrentMonthRange()
 
     const [profileRes, accountsRes, cardsRes, allTxRes, recentTxRes, notifRes, debtsRes] = await Promise.all([
@@ -47,6 +45,10 @@ export default function DashboardPage() {
       supabase.from('debts').select('*').eq('user_id', user.id).eq('status', 'active').order('due_date', { ascending: true }),
     ])
 
+    if (accountsRes.error) message.error('Erro ao carregar contas')
+    if (cardsRes.error) message.error('Erro ao carregar cartões')
+    if (allTxRes.error || recentTxRes.error) message.error('Erro ao carregar transações')
+
     setProfile(profileRes.data)
     setAccounts(accountsRes.data ?? [])
     setCards(cardsRes.data ?? [])
@@ -55,9 +57,15 @@ export default function DashboardPage() {
     setNotifications(notifRes.data ?? [])
     setDebts(debtsRes.data ?? [])
     setLoading(false)
-  }
+  }, [user, message])
 
-  const totalBalance   = accounts.reduce((s, a) => s + a.balance, 0)
+  useEffect(() => {
+    if (user) loadDashboard()
+  }, [user, loadDashboard])
+
+  const totalBalance     = accounts.reduce((s, a) => s + a.balance, 0)
+  const totalDebt        = debts.reduce((s, d) => s + (d.total_amount - d.paid_amount), 0)
+  const netWorth         = totalBalance - totalDebt
   // usa allMonthTx para cálculos precisos (sem limit) — exclui transfer (não é gasto real)
   const monthIncome    = allMonthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
   const monthExpense   = allMonthTx.filter(t => t.type === 'expense' || t.type === 'debt_payment').reduce((s, t) => s + t.amount, 0)
@@ -164,6 +172,7 @@ export default function DashboardPage() {
   const firstName = profile?.name?.split(' ')[0] ?? 'Princesa'
 
   return (
+    <PullToRefresh onRefresh={loadDashboard}>
     <div className="flex flex-col gap-0 page-enter">
       {/* Header banner */}
       <div className="hk-gradient px-4 pt-12 pb-8 relative overflow-hidden">
@@ -197,6 +206,26 @@ export default function DashboardPage() {
           <p className="text-white font-bold" style={{ fontSize: 36, lineHeight: 1 }}>
             {formatCurrency(totalBalance)}
           </p>
+
+          {/* Net worth row — only shown when there are debts */}
+          {debts.length > 0 && (
+            <div style={{
+              marginTop: 10,
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              background: 'rgba(255,255,255,0.15)', borderRadius: 20,
+              padding: '5px 14px',
+            }}>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
+                Patrimônio líquido
+              </span>
+              <span style={{
+                fontSize: 13, fontWeight: 800,
+                color: netWorth >= 0 ? '#A8F5C8' : '#FFB3B3',
+              }}>
+                {netWorth >= 0 ? '' : '−'}{formatCurrency(Math.abs(netWorth))}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Summary cards */}
@@ -231,7 +260,7 @@ export default function DashboardPage() {
                 const brandLabel: Record<string, string> = { visa: 'VISA', mastercard: 'MC', elo: 'elo', amex: 'AMEX', hipercard: 'HIPER', other: '•••' }
                 const isVisa = card.brand === 'visa'
                 return (
-                  <Link key={card.id} href="/cards" onClick={startNav} className="hk-pressable flex-shrink-0" style={{ display: 'block' }}>
+                  <Link key={card.id} href={`/cards/${card.id}`} onClick={startNav} className="hk-pressable flex-shrink-0" style={{ display: 'block' }}>
                     <div
                       className="rounded-2xl relative overflow-hidden"
                       style={{
@@ -509,5 +538,6 @@ export default function DashboardPage() {
       </div>
 
     </div>
+    </PullToRefresh>
   )
 }

@@ -10,7 +10,7 @@ const OPTIONS = [
   { emoji: '💸', label: 'Gasto',          href: '/transactions/new?type=expense' },
   { emoji: '💰', label: 'Receita',         href: '/transactions/new?type=income' },
   { emoji: '💳', label: 'Pagar dívida',    href: '/transactions/new?type=debt_payment' },
-  { emoji: '↔️', label: 'Transferência',   href: '/transactions/new?type=transfer' },
+  { emoji: '↔️', label: 'Transferência',   href: '/transactions/transfer' },
 ]
 
 export default function QuickAddFab() {

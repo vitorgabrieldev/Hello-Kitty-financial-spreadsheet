@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Tag, Skeleton, App } from 'antd'
-import { Plus, ChevronLeft, ChevronRight, Pencil, X, Search, SlidersHorizontal } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, Pencil, X, Search, SlidersHorizontal, CheckCircle, Clock, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import dayjs from 'dayjs'
@@ -12,6 +12,9 @@ import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDateShort } from '@/lib/utils'
 import PageHeader from '@/components/ui/PageHeader'
 import { useTheme } from '@/lib/theme-context'
+import { useUser } from '@/lib/user-context'
+import PullToRefresh from '@/components/ui/PullToRefresh'
+import SwipeableRow from '@/components/ui/SwipeableRow'
 import type { Transaction, Category, Account, Card } from '@/types'
 
 dayjs.locale('pt-br')
@@ -48,16 +51,12 @@ export default function TransactionsPage() {
   const { message, modal } = App.useApp()
   const router = useRouter()
   const { theme } = useTheme()
+  const { user } = useUser()
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load() }, [currentMonth, typeFilter])
-
-  async function load() {
+  const load = useCallback(async () => {
+    if (!user) return
     setLoading(true)
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
     const start = currentMonth.startOf('month').format('YYYY-MM-DD')
     const end = currentMonth.endOf('month').format('YYYY-MM-DD')
 
@@ -82,12 +81,15 @@ export default function TransactionsPage() {
       supabase.from('cards').select('*').eq('user_id', user.id),
     ])
 
+    if (txRes.error) message.error('Erro ao carregar transações')
     setTransactions(txRes.data ?? [])
     setCategories(catRes.data ?? [])
     setAccounts(accRes.data ?? [])
     setCards(cardRes.data ?? [])
     setLoading(false)
-  }
+  }, [user, currentMonth, typeFilter, message])
+
+  useEffect(() => { load() }, [load])
 
   async function handleDelete(tx: Transaction) {
     modal.confirm({
@@ -304,6 +306,7 @@ export default function TransactionsPage() {
   }
 
   return (
+    <PullToRefresh onRefresh={load}>
     <div className="page-enter">
       <PageHeader title="Lançamentos" showNotification />
 
@@ -521,9 +524,26 @@ export default function TransactionsPage() {
                 {txs.map(tx => {
                   const isPending = !tx.is_paid && tx.type !== 'income' && tx.type !== 'transfer'
                   const isTransfer = tx.type === 'transfer'
+                  const canTogglePaid = tx.type !== 'income' && tx.type !== 'transfer'
                   return (
-                    <button
+                    <SwipeableRow
                       key={tx.id}
+                      actions={[
+                        ...(canTogglePaid ? [{
+                          label: tx.is_paid ? 'Pendente' : 'Pago',
+                          icon: tx.is_paid ? <Clock size={18} /> : <CheckCircle size={18} />,
+                          color: tx.is_paid ? '#F39C12' : '#4CAF82',
+                          onPress: () => handleTogglePaid(tx),
+                        }] : []),
+                        {
+                          label: 'Excluir',
+                          icon: <Trash2 size={18} />,
+                          color: '#FF6B6B',
+                          onPress: () => handleDelete(tx),
+                        },
+                      ]}
+                    >
+                    <button
                       type="button"
                       onClick={() => setSelected(tx)}
                       className="rounded-2xl p-4 bg-white flex items-center justify-between hk-card-hover w-full text-left"
@@ -573,6 +593,7 @@ export default function TransactionsPage() {
                         {tx.type === 'income' ? '+' : isTransfer ? '' : '-'}{formatCurrency(tx.amount)}
                       </p>
                     </button>
+                    </SwipeableRow>
                   )
                 })}
               </div>
@@ -582,6 +603,7 @@ export default function TransactionsPage() {
       </div>
       {selected && <DetailSheet tx={selected} />}
     </div>
+    </PullToRefresh>
   )
 }
 

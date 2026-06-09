@@ -196,11 +196,12 @@ export default function SettingsPage() {
   }
 
   const menuItems = [
-    { icon: '🎨', label: 'Tema',        sub: 'Personalize a aparência do app',   onClick: () => router.push('/settings/theme') },
-    { icon: '🏦', label: 'Contas',      sub: 'Gerencie suas contas bancárias',   onClick: () => router.push('/accounts') },
-    { icon: '💳', label: 'Cartões',     sub: 'Gerencie seus cartões de crédito', onClick: () => router.push('/cards') },
-    { icon: '🏷️', label: 'Categorias',  sub: 'Gerencie as categorias de gastos', onClick: () => router.push('/categories') },
-    { icon: '📊', label: 'Relatórios',  sub: 'Gastos e receitas por categoria',  onClick: () => router.push('/reports') },
+    { icon: '🎨', label: 'Tema',         sub: 'Personalize a aparência do app',   onClick: () => router.push('/settings/theme') },
+    { icon: '🏦', label: 'Contas',       sub: 'Gerencie suas contas bancárias',   onClick: () => router.push('/accounts') },
+    { icon: '💳', label: 'Cartões',      sub: 'Gerencie seus cartões de crédito', onClick: () => router.push('/cards') },
+    { icon: '🏷️', label: 'Categorias',   sub: 'Gerencie as categorias de gastos', onClick: () => router.push('/categories') },
+    { icon: '📊', label: 'Relatórios',   sub: 'Gastos e receitas por categoria',  onClick: () => router.push('/reports') },
+    { icon: '🔄', label: 'Recorrentes',  sub: 'Gerencie lançamentos automáticos', onClick: () => router.push('/transactions/recurring') },
   ]
 
   return (
