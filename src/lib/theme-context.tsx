@@ -13,12 +13,16 @@ const ThemeContext = createContext<ThemeContextValue | null>(null)
 const STORAGE_KEY = 'app-theme'
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => getTheme(DEFAULT_THEME_ID))
-
-  useEffect(() => {
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return getTheme(DEFAULT_THEME_ID)
     const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) setThemeState(getTheme(saved))
-  }, [])
+    const t = saved ? getTheme(saved) : getTheme(DEFAULT_THEME_ID)
+    // Apply immediately so gradient and vars are correct on first paint
+    const root = document.documentElement
+    Object.entries(t.vars).forEach(([k, v]) => root.style.setProperty(k, v))
+    root.setAttribute('data-theme', t.id)
+    return t
+  })
 
   useEffect(() => {
     const root = document.documentElement

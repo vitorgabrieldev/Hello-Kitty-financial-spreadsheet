@@ -146,33 +146,6 @@ export default function ThemePage() {
           })}
         </div>
 
-        {/* Dica de upload de imagens */}
-        <div
-          style={{
-            marginTop: 20,
-            background: 'var(--primary-pale)',
-            border: '1px solid var(--border-light)',
-            borderRadius: 16,
-            padding: '12px 14px',
-            display: 'flex',
-            gap: 10,
-            alignItems: 'flex-start',
-          }}
-        >
-          <span style={{ fontSize: 20, flexShrink: 0 }}>🖼️</span>
-          <div>
-            <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)', margin: 0 }}>
-              Imagens personalizadas
-            </p>
-            <p style={{ fontSize: 11, color: 'var(--gray)', margin: '3px 0 0', lineHeight: 1.4 }}>
-              Adicione imagens em <code style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 4px', borderRadius: 4, fontSize: 10 }}>public/themes/</code> com os nomes{' '}
-              <code style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 4px', borderRadius: 4, fontSize: 10 }}>barbie.jpg</code>,{' '}
-              <code style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 4px', borderRadius: 4, fontSize: 10 }}>moranguinho.jpg</code>,{' '}
-              <code style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 4px', borderRadius: 4, fontSize: 10 }}>roxo.jpg</code>,{' '}
-              <code style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 4px', borderRadius: 4, fontSize: 10 }}>neutro.jpg</code>
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import { Button, Skeleton } from 'antd'
 import { BellOff, CheckCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/ui/PageHeader'
+import { useTheme } from '@/lib/theme-context'
 import type { Notification } from '@/types'
 
 const TYPE_CONFIG = {
@@ -17,6 +18,7 @@ const TYPE_CONFIG = {
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
+  const { theme } = useTheme()
 
   useEffect(() => { load() }, [])
 
@@ -76,8 +78,8 @@ export default function NotificationsPage() {
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <BellOff size={40} style={{ color: '#C4A0B0', marginBottom: 12 }} />
-            <p className="font-semibold text-sm" style={{ color: '#3d1a2e' }}>Nenhuma notificação</p>
-            <p className="text-xs mt-1" style={{ color: '#8B6B7A' }}>Você está em dia com tudo! 🎀</p>
+            <p className="font-semibold text-sm" style={{ color: 'var(--on-bg)' }}>Nenhuma notificação</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--on-bg-sub)' }}>Você está em dia com tudo!{theme.hasBow ? ' 🎀' : ''}</p>
           </div>
         ) : (
           notifications.map(notif => {

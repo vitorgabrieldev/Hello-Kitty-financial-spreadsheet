@@ -12,6 +12,9 @@
   --gray:           #8B6B7A;
   --border:         #FFD6E7;
   --border-light:   #FFE8F1;
+  /* Text on body background (white for image-heavy themes, dark for light hello-kitty bg) */
+  --on-bg:     #3d1a2e;
+  --on-bg-sub: #8B6B7A;
   /* Semantic — same for all themes */
   --green:  #4CAF82;
   --red:    #FF6B6B;
@@ -31,6 +34,15 @@ body {
   font-family: 'Inter', 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Text on body background — CSS-driven so funciona antes do JS ─── */
+[data-theme="barbie"],
+[data-theme="moranguinho"],
+[data-theme="roxo"],
+[data-theme="neutro"] {
+  --on-bg:     #FFFFFF;
+  --on-bg-sub: rgba(255, 255, 255, 0.80);
 }
 
 /* ─── Body backgrounds ─── */
@@ -117,6 +129,15 @@ body {
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--cream); }
 ::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 99px; }
+
+/* ─── Hide scrollbar (mantém scroll funcional) ─── */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 
 /* ─── Gradients ─── */
 .hk-gradient {

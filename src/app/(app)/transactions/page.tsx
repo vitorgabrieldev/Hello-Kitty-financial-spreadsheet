@@ -11,6 +11,7 @@ import 'dayjs/locale/pt-br'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDateShort } from '@/lib/utils'
 import PageHeader from '@/components/ui/PageHeader'
+import { useTheme } from '@/lib/theme-context'
 import type { Transaction, Category, Account, Card } from '@/types'
 
 dayjs.locale('pt-br')
@@ -46,6 +47,7 @@ export default function TransactionsPage() {
 
   const { message, modal } = App.useApp()
   const router = useRouter()
+  const { theme } = useTheme()
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load() }, [currentMonth, typeFilter])
@@ -310,19 +312,19 @@ export default function TransactionsPage() {
         <button
           onClick={() => setCurrentMonth(m => m.subtract(1, 'month'))}
           className="w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255,107,157,0.08)', border: 'none', cursor: 'pointer' }}
+          style={{ background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer' }}
         >
-          <ChevronLeft size={18} style={{ color: '#FF6B9D' }} />
+          <ChevronLeft size={18} style={{ color: 'var(--on-bg)' }} />
         </button>
-        <p className="font-bold text-sm capitalize" style={{ color: '#3d1a2e' }}>
+        <p className="font-bold text-sm capitalize" style={{ color: 'var(--on-bg)' }}>
           {currentMonth.format('MMMM [de] YYYY')}
         </p>
         <button
           onClick={() => setCurrentMonth(m => m.add(1, 'month'))}
           className="w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255,107,157,0.08)', border: 'none', cursor: 'pointer' }}
+          style={{ background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer' }}
         >
-          <ChevronRight size={18} style={{ color: '#FF6B9D' }} />
+          <ChevronRight size={18} style={{ color: 'var(--on-bg)' }} />
         </button>
       </div>
 
@@ -343,16 +345,19 @@ export default function TransactionsPage() {
       </div>
 
       {/* Type filter chips */}
-      <div className="px-4 pb-2 flex items-center gap-2 overflow-x-auto">
+      <div className="px-4 pb-2 flex items-center gap-2 overflow-x-auto hide-scrollbar">
         {FILTERS.map(f => (
           <button
             key={f.key}
             onClick={() => setTypeFilter(f.key)}
             className="px-4 py-1.5 rounded-full text-xs font-semibold transition-all flex-shrink-0"
             style={{
-              background: typeFilter === f.key ? '#FF6B9D' : 'rgba(255,107,157,0.08)',
-              color: typeFilter === f.key ? 'white' : '#FF6B9D',
-              border: 'none', cursor: 'pointer',
+              background: typeFilter === f.key ? 'var(--primary)' : 'rgba(255,255,255,0.30)',
+              color: typeFilter === f.key ? 'white' : 'var(--on-bg)',
+              border: typeFilter === f.key ? 'none' : '1px solid rgba(255,255,255,0.45)',
+              cursor: 'pointer',
+              backdropFilter: 'blur(6px)',
+              WebkitBackdropFilter: 'blur(6px)',
             }}
           >
             {f.label}
@@ -495,9 +500,9 @@ export default function TransactionsPage() {
           ))
         ) : Object.keys(grouped).length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <span className="text-5xl mb-3">🎀</span>
-            <p className="font-semibold text-sm" style={{ color: '#3d1a2e' }}>Nenhum lançamento</p>
-            <p className="text-xs mt-1 mb-4" style={{ color: '#8B6B7A' }}>
+            <span className="text-5xl mb-3">{theme.hasBow ? '🎀' : theme.emoji}</span>
+            <p className="font-semibold text-sm" style={{ color: 'var(--on-bg)' }}>Nenhum lançamento</p>
+            <p className="text-xs mt-1 mb-4" style={{ color: 'var(--on-bg-sub)' }}>
               {activeFilterCount > 0 ? 'Tente remover alguns filtros' : 'Toque no + para adicionar'}
             </p>
             {activeFilterCount > 0 && (
@@ -575,11 +580,6 @@ export default function TransactionsPage() {
           ))
         )}
       </div>
-
-      <Link href="/transactions/new" className="hk-fab" aria-label="Novo lançamento">
-        <Plus size={24} color="white" />
-      </Link>
-
       {selected && <DetailSheet tx={selected} />}
     </div>
   )

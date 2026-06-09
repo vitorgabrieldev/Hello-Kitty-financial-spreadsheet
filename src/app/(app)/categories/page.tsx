@@ -5,6 +5,7 @@ import { Button, Drawer, Form, App } from 'antd'
 import { Plus, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import PageHeader from '@/components/ui/PageHeader'
+import { useTheme } from '@/lib/theme-context'
 import type { Category } from '@/types'
 
 const EMOJI_OPTIONS = ['🍽️','💅','🛍️','🚗','💊','🎉','🏠','📚','🐾','✈️','🎬','💪','💰','💻','📈','🎁','✨','☕','🎮','🎵','💄','👗','🌸','🍰','🎀','💕','🌷','🦄']
@@ -49,6 +50,7 @@ export default function CategoriesPage() {
   const [selectedType, setSelectedType]   = useState<'both' | 'expense' | 'income'>('both')
   const [form] = Form.useForm()
   const { message, modal } = App.useApp()
+  const { theme } = useTheme()
 
   const nameValue = Form.useWatch('name', form)
 
@@ -97,11 +99,11 @@ export default function CategoriesPage() {
     if (editing) {
       const { error } = await supabase.from('categories').update(payload).eq('id', editing.id).eq('user_id', user.id)
       if (error) { message.error('Erro ao atualizar'); return }
-      message.success('Categoria atualizada! 🎀')
+      message.success(`Categoria atualizada!${theme.hasBow ? ' 🎀' : ''}`)
     } else {
       const { error } = await supabase.from('categories').insert({ ...payload, user_id: user.id, is_default: false })
       if (error) { message.error('Erro ao criar categoria'); return }
-      message.success('Categoria criada! 🎀')
+      message.success(`Categoria criada!${theme.hasBow ? ' 🎀' : ''}`)
     }
     setDrawerOpen(false)
     load()
@@ -155,8 +157,8 @@ export default function CategoriesPage() {
           </div>
         ) : categories.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <span className="text-5xl mb-3">🎀</span>
-            <p className="font-semibold text-sm mb-4" style={{ color: '#3d1a2e' }}>Nenhuma categoria ainda</p>
+            <span className="text-5xl mb-3">{theme.hasBow ? '🎀' : '🏷️'}</span>
+            <p className="font-semibold text-sm mb-4" style={{ color: 'var(--on-bg)' }}>Nenhuma categoria ainda</p>
             <Button type="primary" shape="round" onClick={openNew} icon={<Plus size={14} />}>
               Criar categoria
             </Button>

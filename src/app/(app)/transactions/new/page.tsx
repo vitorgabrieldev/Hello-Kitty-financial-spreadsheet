@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
+import { useTheme } from '@/lib/theme-context'
 import type { Category, Account, Card, Debt, RecurrenceFrequency } from '@/types'
 
 // ── ATM-style currency input ──────────────────────────────────────────────────
@@ -231,6 +232,7 @@ export default function NewTransactionPage() {
 function NewTransactionForm() {
   const router = useRouter()
   const { message } = App.useApp()
+  const { theme } = useTheme()
   const searchParams = useSearchParams()
 
   function resolveType(p: string | null): TxType {
@@ -376,7 +378,7 @@ function NewTransactionForm() {
         if (newStatus === 'paid') {
           message.success(`Dívida "${selectedDebt.name}" quitada! 🎉`)
         } else {
-          message.success('Pagamento registrado! 🎀')
+          message.success(`Pagamento registrado!${theme.hasBow ? ' 🎀' : ''}`)
         }
       } else {
         const resolvedIsPaid = type === 'income' ? true : isPaid
@@ -415,7 +417,7 @@ function NewTransactionForm() {
           if (error) throw error
         }
 
-        message.success('Lançamento adicionado! 🎀')
+        message.success(`Lançamento adicionado!${theme.hasBow ? ' 🎀' : ''}`)
       }
 
       router.push('/transactions')
@@ -821,7 +823,7 @@ function NewTransactionForm() {
             fontSize: 16, fontWeight: 700, marginTop: 8,
             transition: 'background 0.2s ease',
           }}>
-            {loading ? 'Salvando...' : type === 'debt_payment' ? 'Registrar pagamento 💳' : type === 'transfer' ? 'Confirmar transferência ↔️' : 'Salvar lançamento 🎀'}
+            {loading ? 'Salvando...' : type === 'debt_payment' ? 'Registrar pagamento 💳' : type === 'transfer' ? 'Confirmar transferência ↔️' : `Salvar lançamento${theme.hasBow ? ' 🎀' : ''}`}
           </button>
         )}
       </div>

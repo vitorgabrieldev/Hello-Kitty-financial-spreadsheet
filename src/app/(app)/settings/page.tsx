@@ -158,7 +158,7 @@ export default function SettingsPage() {
 
       if (updateError) throw updateError
 
-      message.success('Foto atualizada! 🎀')
+      message.success(`Foto atualizada!${theme.hasBow ? ' 🎀' : ''}`)
       load()
     } catch {
       message.error('Erro ao enviar foto. Verifique se o bucket "avatars" está configurado no Supabase.')
@@ -176,7 +176,7 @@ export default function SettingsPage() {
       .update({ ...values, marital_status: maritalStatus || null })
       .eq('user_id', profile!.user_id)
     if (error) { message.error('Erro ao salvar perfil'); return }
-    message.success('Perfil atualizado! 🎀')
+    message.success(`Perfil atualizado!${theme.hasBow ? ' 🎀' : ''}`)
     setDrawerOpen(false)
     load()
   }

@@ -22,11 +22,11 @@ export default function PageHeader({
   return (
     <div className="flex items-center justify-between px-4 pt-4 pb-2">
       <div>
-        <h1 className="text-xl font-bold leading-tight" style={{ color: '#3d1a2e' }}>
+        <h1 className="text-xl font-bold leading-tight" style={{ color: 'var(--on-bg)' }}>
           {title}
         </h1>
         {subtitle && (
-          <p className="text-sm mt-0.5" style={{ color: '#8B6B7A' }}>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--on-bg-sub)' }}>
             {subtitle}
           </p>
         )}

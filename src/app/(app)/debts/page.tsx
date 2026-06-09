@@ -7,6 +7,7 @@ import { Plus, Pencil, Trash2, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
 import PageHeader from '@/components/ui/PageHeader'
+import { useTheme } from '@/lib/theme-context'
 import type { Debt } from '@/types'
 
 const COLORS = ['#FF6B6B', '#FF6B9D', '#FF9EC4', '#F39C12', '#9B59B6', '#3498DB', '#2ECC71', '#E74C3C']
@@ -173,6 +174,7 @@ export default function DebtsPage() {
   const [picker, setPicker] = useState<'installments' | 'due_date' | null>(null)
   const [form] = Form.useForm()
   const { message, modal } = App.useApp()
+  const { theme } = useTheme()
 
   // form state
   const [name, setName] = useState('')
@@ -262,11 +264,11 @@ export default function DebtsPage() {
         const newStatus = editing.paid_amount >= totalAmount ? 'paid' : 'active'
         const { error } = await supabase.from('debts').update({ ...payload, status: newStatus }).eq('id', editing.id).eq('user_id', user.id)
         if (error) throw error
-        message.success('Dívida atualizada! 🎀')
+        message.success(`Dívida atualizada!${theme.hasBow ? ' 🎀' : ''}`)
       } else {
         const { error } = await supabase.from('debts').insert({ ...payload, user_id: user.id, paid_amount: 0, status: 'active' })
         if (error) throw error
-        message.success('Dívida cadastrada! 🎀')
+        message.success(`Dívida cadastrada!${theme.hasBow ? ' 🎀' : ''}`)
       }
       setDrawerOpen(false)
       load()
@@ -304,7 +306,7 @@ export default function DebtsPage() {
     <div className="page-enter">
       <PageHeader
         title="Dívidas"
-        subtitle={activeDebts.length > 0 ? `Faltam ${formatCurrency(totalDebt)}` : 'Tudo em dia! 🎀'}
+        subtitle={activeDebts.length > 0 ? `Faltam ${formatCurrency(totalDebt)}` : `Tudo em dia!${theme.hasBow ? ' 🎀' : ''}`}
         rightAction={
           <Button type="primary" shape="round" icon={<Plus size={16} />} onClick={openNew} size="middle">
             Nova
@@ -326,9 +328,9 @@ export default function DebtsPage() {
           ))
         ) : debts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <span className="text-5xl mb-3">💸</span>
-            <p className="font-semibold text-sm mb-1" style={{ color: '#3d1a2e' }}>Nenhuma dívida cadastrada</p>
-            <p className="text-xs mb-4 text-center" style={{ color: '#8B6B7A' }}>Registre suas dívidas para acompanhar o progresso</p>
+            <span className="text-5xl mb-3">{theme.hasBow ? '🎀' : '💸'}</span>
+            <p className="font-semibold text-sm mb-1" style={{ color: 'var(--on-bg)' }}>Nenhuma dívida cadastrada</p>
+            <p className="text-xs mb-4 text-center" style={{ color: 'var(--on-bg-sub)' }}>Registre suas dívidas para acompanhar o progresso</p>
             <Button type="primary" shape="round" onClick={openNew} icon={<Plus size={14} />}>
               Cadastrar dívida
             </Button>
@@ -339,7 +341,7 @@ export default function DebtsPage() {
 
             {paidDebts.length > 0 && (
               <>
-                <p style={{ fontSize: 12, fontWeight: 700, color: '#C4A0B0', letterSpacing: 1, textTransform: 'uppercase', marginTop: 8, marginBottom: 0 }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-bg-sub)', letterSpacing: 1, textTransform: 'uppercase', marginTop: 8, marginBottom: 0 }}>
                   Quitadas
                 </p>
                 {paidDebts.map(debt => <DebtCard key={debt.id} debt={debt} onEdit={openEdit} onDelete={handleDelete} />)}

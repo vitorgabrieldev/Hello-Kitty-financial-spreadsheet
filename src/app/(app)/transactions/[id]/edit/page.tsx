@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
+import { useTheme } from '@/lib/theme-context'
 import type { Category, Account, Card, RecurrenceFrequency, Transaction } from '@/types'
 
 // ── ATM-style currency input ──────────────────────────────────────────────────
@@ -194,6 +195,7 @@ export default function EditTransactionPage() {
   const params = useParams()
   const id = params.id as string
   const { message } = App.useApp()
+  const { theme } = useTheme()
 
   const [original, setOriginal] = useState<Transaction | null>(null)
   const [amount, setAmount] = useState(0)
@@ -299,7 +301,7 @@ export default function EditTransactionPage() {
         .eq('id', id)
         .eq('user_id', user.id)
       if (error) throw error
-      message.success('Lançamento atualizado 🎀')
+      message.success(`Lançamento atualizado${theme.hasBow ? ' 🎀' : ''}`)
       router.push('/transactions')
     } catch {
       message.error('Erro ao salvar')
@@ -324,7 +326,7 @@ export default function EditTransactionPage() {
         .eq('user_id', user.id)
         .eq('is_paid', false)
       if (error) throw error
-      message.success('Todas as parcelas marcadas como pagas 🎀')
+      message.success(`Todas as parcelas marcadas como pagas${theme.hasBow ? ' 🎀' : ''}`)
       setRemainingInstallments(0)
       setIsPaid(true)
     } catch {
@@ -345,7 +347,7 @@ export default function EditTransactionPage() {
   if (initializing) {
     return (
       <div style={{ minHeight: '100dvh', background: '#FFF5F8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 32 }}>🎀</span>
+        <span style={{ fontSize: 32 }}>{theme.hasBow ? '🎀' : theme.emoji}</span>
       </div>
     )
   }
@@ -568,7 +570,7 @@ export default function EditTransactionPage() {
           fontSize: 16, fontWeight: 700, marginTop: 8,
           transition: 'background 0.2s ease',
         }}>
-          {loading ? 'Salvando...' : 'Salvar alterações 🎀'}
+          {loading ? 'Salvando...' : `Salvar alterações${theme.hasBow ? ' 🎀' : ''}`}
         </button>
       </div>
 

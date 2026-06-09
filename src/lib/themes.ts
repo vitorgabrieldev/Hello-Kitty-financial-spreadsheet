@@ -6,6 +6,8 @@ export interface Theme {
   id: ThemeId
   label: string
   emoji: string
+  /** Whether to show 🎀 bow in toasts, greetings, buttons, and decorative elements. */
+  hasBow: boolean
   /** Gradient shown in the theme picker card (and as body bg fallback when no image). */
   bgGradient: string
   vars: Record<string, string>
@@ -55,6 +57,7 @@ export const THEMES: Theme[] = [
     id: 'hello-kitty',
     label: 'Hello Kitty',
     emoji: '🎀',
+    hasBow: true,
     bgGradient: 'linear-gradient(145deg, #FF6B9D 0%, #FFB3CE 100%)',
     vars: {
       '--primary':        '#FF6B9D',
@@ -67,6 +70,8 @@ export const THEMES: Theme[] = [
       '--gray':           '#8B6B7A',
       '--border':         '#FFD6E7',
       '--border-light':   '#FFE8F1',
+      '--on-bg':          '#3d1a2e',
+      '--on-bg-sub':      '#8B6B7A',
     },
     antd: makeAntd('#FF6B9D', '#FFF5F7', '#3d1a2e', '#FFD6E7', '#FFE8F1'),
   },
@@ -74,6 +79,7 @@ export const THEMES: Theme[] = [
     id: 'barbie',
     label: 'Barbie',
     emoji: '💅',
+    hasBow: false,
     bgGradient: 'linear-gradient(145deg, #F06292 0%, #FFD6E7 100%)',
     vars: {
       '--primary':        '#F06292',
@@ -86,6 +92,8 @@ export const THEMES: Theme[] = [
       '--gray':           '#8B5A6B',
       '--border':         '#F8BBD0',
       '--border-light':   '#FCE4EC',
+      '--on-bg':          '#FFFFFF',
+      '--on-bg-sub':      'rgba(255,255,255,0.80)',
     },
     antd: makeAntd('#F06292', '#FFF0F5', '#3D0A1E', '#F8BBD0', '#FCE4EC'),
   },
@@ -93,6 +101,7 @@ export const THEMES: Theme[] = [
     id: 'moranguinho',
     label: 'Moranguinho',
     emoji: '🍓',
+    hasBow: false,
     bgGradient: 'linear-gradient(145deg, #EF5350 0%, #FFCDD2 100%)',
     vars: {
       '--primary':        '#EF5350',
@@ -105,6 +114,8 @@ export const THEMES: Theme[] = [
       '--gray':           '#7D4E4E',
       '--border':         '#FFCDD2',
       '--border-light':   '#FFEBEE',
+      '--on-bg':          '#FFFFFF',
+      '--on-bg-sub':      'rgba(255,255,255,0.80)',
     },
     antd: makeAntd('#EF5350', '#FFF5F5', '#2D0A0A', '#FFCDD2', '#FFEBEE'),
   },
@@ -112,6 +123,7 @@ export const THEMES: Theme[] = [
     id: 'roxo',
     label: 'Roxo',
     emoji: '💜',
+    hasBow: false,
     bgGradient: 'linear-gradient(145deg, #8B5CF6 0%, #E9D5FF 100%)',
     vars: {
       '--primary':        '#8B5CF6',
@@ -124,6 +136,8 @@ export const THEMES: Theme[] = [
       '--gray':           '#6D5A8A',
       '--border':         '#DDD6FE',
       '--border-light':   '#EDE9FE',
+      '--on-bg':          '#FFFFFF',
+      '--on-bg-sub':      'rgba(255,255,255,0.80)',
     },
     antd: makeAntd('#8B5CF6', '#F5F3FF', '#2E1065', '#DDD6FE', '#EDE9FE'),
   },
@@ -131,6 +145,7 @@ export const THEMES: Theme[] = [
     id: 'neutro',
     label: 'Neutro',
     emoji: '🩶',
+    hasBow: false,
     bgGradient: 'linear-gradient(145deg, #64748B 0%, #CBD5E1 100%)',
     vars: {
       '--primary':        '#64748B',
@@ -143,6 +158,8 @@ export const THEMES: Theme[] = [
       '--gray':           '#64748B',
       '--border':         '#CBD5E1',
       '--border-light':   '#E2E8F0',
+      '--on-bg':          '#FFFFFF',
+      '--on-bg-sub':      'rgba(255,255,255,0.80)',
     },
     antd: makeAntd('#64748B', '#F8FAFC', '#1E293B', '#CBD5E1', '#E2E8F0'),
   },

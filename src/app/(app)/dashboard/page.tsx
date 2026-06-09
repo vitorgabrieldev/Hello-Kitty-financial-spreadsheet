@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { Card } from 'antd'
-import { TrendingUp, TrendingDown, Wallet, CreditCard, Bell, ChevronRight } from 'lucide-react'
+import { TrendingUp, TrendingDown, Wallet, Bell, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDateShort, getCurrentMonthRange } from '@/lib/utils'
 import { useNavigation } from '@/lib/navigation-context'
+import { useTheme } from '@/lib/theme-context'
 import type { Transaction, Notification, Account, Card as CardType, Profile, Debt } from '@/types'
 
 export default function DashboardPage() {
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   const [debts, setDebts] = useState<Debt[]>([])
   const [loading, setLoading] = useState(true)
   const { startNav } = useNavigation()
+  const { theme } = useTheme()
 
   useEffect(() => {
     loadDashboard()
@@ -63,6 +65,15 @@ export default function DashboardPage() {
   const monthPending   = allMonthTx.filter(t => (t.type === 'expense' || t.type === 'debt_payment') && !t.is_paid).reduce((s, t) => s + t.amount, 0)
   const monthBalance   = monthIncome - monthExpense
 
+  const glassCard = {
+    background: theme.hasBow ? 'rgba(255,255,255,0.72)' : 'rgba(255,255,255,0.12)',
+    backdropFilter: 'blur(14px)',
+    WebkitBackdropFilter: 'blur(14px)',
+    border: `1px solid ${theme.hasBow ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.2)'}`,
+  }
+  const innerDivider = theme.hasBow ? '1px solid #FFE8F1' : '1px solid rgba(255,255,255,0.15)'
+  const progressTrack = theme.hasBow ? '#FFE8F1' : 'rgba(255,255,255,0.2)'
+
   if (loading) {
     return (
       <div className="flex flex-col gap-0 page-enter">
@@ -97,7 +108,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex gap-3 overflow-hidden -mx-4 px-4">
               {[1, 2].map(i => (
-                <div key={i} className="skeleton rounded-2xl flex-shrink-0" style={{ width: 200, height: 110 }} />
+                <div key={i} className="skeleton rounded-2xl flex-shrink-0" style={{ width: 212, height: 132 }} />
               ))}
             </div>
           </div>
@@ -110,7 +121,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex flex-col gap-2">
               {[1, 2].map(i => (
-                <div key={i} className="rounded-2xl p-4 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.45)', border: '1px solid #FFE8F1' }}>
+                <div key={i} className="rounded-2xl p-4 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.45)', border: innerDivider }}>
                   <div className="flex items-center gap-3">
                     <div className="skeleton w-10 h-10 rounded-full" />
                     <div className="flex flex-col gap-1.5">
@@ -132,7 +143,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex flex-col gap-2">
               {[1, 2, 3].map(i => (
-                <div key={i} className="rounded-2xl p-4 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.45)', border: '1px solid #FFE8F1' }}>
+                <div key={i} className="rounded-2xl p-4 flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.45)', border: innerDivider }}>
                   <div className="flex items-center gap-3">
                     <div className="skeleton w-10 h-10 rounded-full" />
                     <div className="flex flex-col gap-1.5">
@@ -156,11 +167,17 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-0 page-enter">
       {/* Header banner */}
       <div className="hk-gradient px-4 pt-12 pb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 text-8xl opacity-10 pointer-events-none select-none" style={{ transform: 'translate(10%, -10%)' }}>🎀</div>
+        {/* Decorative circles */}
+        <div style={{ position: 'absolute', right: -70, top: -70, width: 280, height: 280, borderRadius: '50%', background: 'rgba(255,255,255,0.10)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: -50, bottom: -50, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', right: 60, bottom: -30, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' }} />
+        {/* Shine overlay */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 55%)', pointerEvents: 'none' }} />
+        <div className="absolute top-0 right-0 text-8xl opacity-10 pointer-events-none select-none" style={{ transform: 'translate(10%, -10%)' }}>{theme.emoji}</div>
         <div className="relative">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-white/80 text-sm">Olá, {firstName}! 🎀</p>
+              <p className="text-white/80 text-sm">Olá, {firstName}!{theme.hasBow ? ' 🎀' : ''}</p>
               <h2 className="text-white font-bold text-2xl leading-tight">Saldo total</h2>
             </div>
             <Link href="/notifications" onClick={startNav} className="hk-pressable">
@@ -206,26 +223,79 @@ export default function DashboardPage() {
         {cards.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-base" style={{ color: '#3d1a2e' }}>Cartões de crédito</h3>
-              <Link href="/cards" onClick={startNav} className="hk-pressable text-sm" style={{ color: '#FF6B9D' }}>Ver todos</Link>
+              <h3 className="font-bold text-base" style={{ color: 'var(--on-bg)' }}>Cartões de crédito</h3>
+              <Link href="/cards" onClick={startNav} className="hk-pressable text-sm" style={{ color: 'var(--on-bg)' }}>Ver todos</Link>
             </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
-              {cards.map(card => (
-                <Link key={card.id} href={`/cards/${card.id}`} onClick={startNav} className="hk-pressable">
-                  <div
-                    className="rounded-2xl p-4 flex-shrink-0"
-                    style={{ width: 200, background: card.color || 'linear-gradient(135deg, #FF6B9D, #FF4D8D)', minHeight: 110 }}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <CreditCard size={18} color="white" />
-                      <span className="text-white/80 text-xs">{card.brand.toUpperCase()}</span>
+            <div className="flex gap-4 overflow-x-auto pb-3 -mx-4 px-4 hide-scrollbar">
+              {cards.map(card => {
+                const brandLabel: Record<string, string> = { visa: 'VISA', mastercard: 'MC', elo: 'elo', amex: 'AMEX', hipercard: 'HIPER', other: '•••' }
+                const isVisa = card.brand === 'visa'
+                return (
+                  <Link key={card.id} href="/cards" onClick={startNav} className="hk-pressable flex-shrink-0" style={{ display: 'block' }}>
+                    <div
+                      className="rounded-2xl relative overflow-hidden"
+                      style={{
+                        width: 212, height: 132,
+                        background: card.color || '#FF6B9D',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.22)',
+                      }}
+                    >
+                      {/* Decorative circles */}
+                      <div style={{ position: 'absolute', right: -35, top: -35, width: 150, height: 150, borderRadius: '50%', background: 'rgba(255,255,255,0.12)', pointerEvents: 'none' }} />
+                      <div style={{ position: 'absolute', right: -60, bottom: -25, width: 140, height: 140, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
+                      {/* Shine overlay */}
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 55%)', pointerEvents: 'none' }} />
+                      {/* Watermark */}
+                      <div style={{ position: 'absolute', bottom: -6, right: -2, fontSize: 60, opacity: 0.10, pointerEvents: 'none', lineHeight: 1 }}>{theme.emoji}</div>
+
+                      <div style={{ padding: '12px 14px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative' }}>
+                        {/* Chip + brand */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          {/* Gold chip */}
+                          <div style={{
+                            width: 30, height: 22, borderRadius: 4,
+                            background: 'linear-gradient(135deg, #F5E642 0%, #D4941A 50%, #F5D742 100%)',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.28)',
+                            display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr',
+                            gap: 2, padding: 4,
+                          }}>
+                            {[0, 1, 2, 3].map(i => (
+                              <div key={i} style={{ background: 'rgba(0,0,0,0.16)', borderRadius: 1 }} />
+                            ))}
+                          </div>
+                          {/* Brand badge */}
+                          <div style={{
+                            background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+                            borderRadius: 6, padding: '3px 9px',
+                            fontSize: 10, fontWeight: 900, color: 'rgba(255,255,255,0.95)',
+                            border: '1px solid rgba(255,255,255,0.3)',
+                            letterSpacing: isVisa ? 1.5 : 0, fontStyle: isVisa ? 'italic' : 'normal',
+                          }}>
+                            {brandLabel[card.brand] ?? card.brand.toUpperCase()}
+                          </div>
+                        </div>
+
+                        {/* Card number */}
+                        <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 11, letterSpacing: 3, fontFamily: 'monospace', margin: 0 }}>
+                          {card.last_four_digits ? `•••• ${card.last_four_digits}` : '•••• ••••'}
+                        </p>
+
+                        {/* Bottom: name + fatura */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                          <div>
+                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 9, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 600 }}>{card.name}</p>
+                            <p style={{ color: 'white', fontWeight: 800, fontSize: 16, margin: 0, lineHeight: 1 }}>{formatCurrency(card.current_balance)}</p>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 0.5 }}>Limite</p>
+                            <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, fontWeight: 700, margin: 0 }}>{formatCurrency(card.limit_amount)}</p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-white text-xs opacity-80">{card.name}</p>
-                    <p className="text-white font-bold text-lg">{formatCurrency(card.current_balance)}</p>
-                    <p className="text-white/60 text-xs">de {formatCurrency(card.limit_amount)}</p>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                )
+              })}
             </div>
           </div>
         )}
@@ -233,47 +303,49 @@ export default function DashboardPage() {
         {/* Monthly summary */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-base" style={{ color: '#3d1a2e' }}>Resumo do mês</h3>
-            <Link href="/transactions" onClick={startNav} className="hk-pressable text-sm" style={{ color: '#FF6B9D' }}>Ver tudo</Link>
+            <h3 className="font-bold text-base" style={{ color: 'var(--on-bg)' }}>Resumo do mês</h3>
+            <Link href="/transactions" onClick={startNav} className="hk-pressable text-sm" style={{ color: 'var(--on-bg)' }}>Ver tudo</Link>
           </div>
-          <div style={{ background: 'white', border: '1px solid #FFE8F1', borderRadius: 20, overflow: 'hidden' }}>
+          <div style={{ ...glassCard, borderRadius: 20, overflow: 'hidden', position: 'relative' }}>
+            {/* Decorative circle */}
+            <div style={{ position: 'absolute', right: -40, top: -40, width: 160, height: 160, borderRadius: '50%', background: 'var(--primary-pale)', opacity: 0.5, pointerEvents: 'none' }} />
             {/* Saldo previsto */}
-            <div style={{ padding: '14px 16px', borderBottom: '1px solid #FFE8F1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '14px 16px', borderBottom: innerDivider, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <p style={{ fontSize: 12, color: '#8B6B7A', margin: 0 }}>Saldo do mês</p>
+                <p style={{ fontSize: 12, color: 'var(--on-bg-sub)', margin: 0 }}>Saldo do mês</p>
                 <p style={{ fontSize: 18, fontWeight: 800, color: monthBalance >= 0 ? '#4CAF82' : '#FF6B6B', margin: 0 }}>
                   {monthBalance >= 0 ? '+' : ''}{formatCurrency(monthBalance)}
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: 12, color: '#8B6B7A', margin: 0 }}>Receitas − Gastos</p>
-                <p style={{ fontSize: 12, color: '#3d1a2e', fontWeight: 600, margin: 0 }}>
+                <p style={{ fontSize: 12, color: 'var(--on-bg-sub)', margin: 0 }}>Receitas − Gastos</p>
+                <p style={{ fontSize: 12, color: 'var(--on-bg)', fontWeight: 600, margin: 0 }}>
                   {formatCurrency(monthIncome)} − {formatCurrency(monthExpense)}
                 </p>
               </div>
             </div>
             {/* Pago vs Pendente */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
-              <div style={{ padding: '12px 16px', borderRight: '1px solid #FFE8F1' }}>
-                <p style={{ fontSize: 11, color: '#8B6B7A', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 600 }}>Pago</p>
+              <div style={{ padding: '12px 16px', borderRight: innerDivider }}>
+                <p style={{ fontSize: 11, color: 'var(--on-bg-sub)', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 600 }}>Pago</p>
                 <p style={{ fontSize: 15, fontWeight: 800, color: '#4CAF82', margin: 0 }}>{formatCurrency(monthPaid)}</p>
               </div>
               <div style={{ padding: '12px 16px' }}>
-                <p style={{ fontSize: 11, color: '#8B6B7A', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 600 }}>Pendente</p>
-                <p style={{ fontSize: 15, fontWeight: 800, color: monthPending > 0 ? '#F39C12' : '#C4A0B0', margin: 0 }}>{formatCurrency(monthPending)}</p>
+                <p style={{ fontSize: 11, color: 'var(--on-bg-sub)', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 600 }}>Pendente</p>
+                <p style={{ fontSize: 15, fontWeight: 800, color: monthPending > 0 ? '#F39C12' : 'var(--on-bg-sub)', margin: 0 }}>{formatCurrency(monthPending)}</p>
               </div>
             </div>
             {/* Barra de progresso de gastos pagos */}
             {monthExpense > 0 && (
               <div style={{ padding: '0 16px 14px' }}>
-                <div style={{ height: 6, borderRadius: 99, background: '#FFE8F1', overflow: 'hidden' }}>
+                <div style={{ height: 6, borderRadius: 99, background: progressTrack, overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', borderRadius: 99, background: '#4CAF82',
                     width: `${Math.min((monthPaid / monthExpense) * 100, 100)}%`,
                     transition: 'width 0.4s ease',
                   }} />
                 </div>
-                <p style={{ fontSize: 11, color: '#C4A0B0', margin: '4px 0 0', textAlign: 'right' }}>
+                <p style={{ fontSize: 11, color: 'var(--on-bg-sub)', margin: '4px 0 0', textAlign: 'right' }}>
                   {Math.round((monthPaid / monthExpense) * 100)}% dos gastos pagos
                 </p>
               </div>
@@ -285,31 +357,32 @@ export default function DashboardPage() {
         {debts.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-base" style={{ color: '#3d1a2e' }}>Dívidas ativas</h3>
-              <Link href="/debts" onClick={startNav} className="hk-pressable text-sm" style={{ color: '#FF6B9D' }}>Ver todas</Link>
+              <h3 className="font-bold text-base" style={{ color: 'var(--on-bg)' }}>Dívidas ativas</h3>
+              <Link href="/debts" onClick={startNav} className="hk-pressable text-sm" style={{ color: 'var(--on-bg)' }}>Ver todas</Link>
             </div>
-            <div style={{ background: 'white', border: '1px solid #FFE8F1', borderRadius: 20, overflow: 'hidden' }}>
+            <div style={{ ...glassCard, borderRadius: 20, overflow: 'hidden', position: 'relative' }}>
+              <div style={{ position: 'absolute', left: -30, bottom: -30, width: 130, height: 130, borderRadius: '50%', background: 'var(--primary-pale)', opacity: 0.5, pointerEvents: 'none' }} />
               {debts.slice(0, 3).map((debt, i) => {
                 const remaining = debt.total_amount - debt.paid_amount
                 const progress = Math.min((debt.paid_amount / debt.total_amount) * 100, 100)
                 return (
-                  <div key={debt.id} style={{ padding: '12px 16px', borderBottom: i < Math.min(debts.length, 3) - 1 ? '1px solid #FFE8F1' : 'none' }}>
+                  <div key={debt.id} style={{ padding: '12px 16px', borderBottom: i < Math.min(debts.length, 3) - 1 ? innerDivider : 'none' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ width: 8, height: 8, borderRadius: '50%', background: debt.color || '#9B59B6', flexShrink: 0 }} />
-                        <span style={{ fontSize: 13, fontWeight: 600, color: '#3d1a2e' }}>{debt.name}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--on-bg)' }}>{debt.name}</span>
                       </div>
                       <span style={{ fontSize: 13, fontWeight: 700, color: '#FF6B6B' }}>{formatCurrency(remaining)}</span>
                     </div>
-                    <div style={{ height: 4, borderRadius: 99, background: '#FFE8F1', overflow: 'hidden' }}>
+                    <div style={{ height: 4, borderRadius: 99, background: progressTrack, overflow: 'hidden' }}>
                       <div style={{ height: '100%', borderRadius: 99, background: debt.color || '#9B59B6', width: `${progress}%`, transition: 'width 0.4s ease' }} />
                     </div>
                   </div>
                 )
               })}
               {debts.length > 3 && (
-                <div style={{ padding: '10px 16px', textAlign: 'center', borderTop: '1px solid #FFE8F1' }}>
-                  <Link href="/debts" onClick={startNav} style={{ fontSize: 12, color: '#FF6B9D', fontWeight: 600 }}>
+                <div style={{ padding: '10px 16px', textAlign: 'center', borderTop: innerDivider }}>
+                  <Link href="/debts" onClick={startNav} style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600 }}>
                     +{debts.length - 3} dívida{debts.length - 3 > 1 ? 's' : ''} a mais
                   </Link>
                 </div>
@@ -322,28 +395,29 @@ export default function DashboardPage() {
         {accounts.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-base" style={{ color: '#3d1a2e' }}>Contas</h3>
-              <Link href="/accounts" onClick={startNav} className="hk-pressable text-sm" style={{ color: '#FF6B9D' }}>Ver todas</Link>
+              <h3 className="font-bold text-base" style={{ color: 'var(--on-bg)' }}>Contas</h3>
+              <Link href="/accounts" onClick={startNav} className="hk-pressable text-sm" style={{ color: 'var(--on-bg)' }}>Ver todas</Link>
             </div>
             <div className="flex flex-col gap-2">
               {accounts.slice(0, 3).map(account => (
                 <Link key={account.id} href={`/accounts/${account.id}`} onClick={startNav} className="hk-pressable block">
                   <div
                     className="rounded-2xl p-4 flex items-center justify-between"
-                    style={{ background: '#FFFFFF', border: '1px solid #FFE8F1' }}
+                    style={{ ...glassCard, position: 'relative', overflow: 'hidden' }}
                   >
+                    <div style={{ position: 'absolute', right: -20, top: -20, width: 80, height: 80, borderRadius: '50%', background: account.color + '18', pointerEvents: 'none' }} />
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: account.color + '20' }}>
                         <Wallet size={18} style={{ color: account.color }} />
                       </div>
                       <div>
-                        <p className="font-semibold text-sm" style={{ color: '#3d1a2e' }}>{account.name}</p>
-                        <p className="text-xs" style={{ color: '#8B6B7A' }}>{account.bank_name}</p>
+                        <p className="font-semibold text-sm" style={{ color: 'var(--on-bg)' }}>{account.name}</p>
+                        <p className="text-xs" style={{ color: 'var(--on-bg-sub)' }}>{account.bank_name}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-sm" style={{ color: '#3d1a2e' }}>{formatCurrency(account.balance)}</p>
-                      <ChevronRight size={14} style={{ color: '#C4A0B0', marginLeft: 'auto' }} />
+                      <p className="font-bold text-sm" style={{ color: 'var(--on-bg)' }}>{formatCurrency(account.balance)}</p>
+                      <ChevronRight size={14} style={{ color: 'var(--on-bg-sub)', marginLeft: 'auto' }} />
                     </div>
                   </div>
                 </Link>
@@ -355,15 +429,15 @@ export default function DashboardPage() {
         {/* Recent transactions */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-bold text-base" style={{ color: '#3d1a2e' }}>Últimos lançamentos</h3>
-            <Link href="/transactions" onClick={startNav} className="hk-pressable text-sm" style={{ color: '#FF6B9D' }}>Ver todos</Link>
+            <h3 className="font-bold text-base" style={{ color: 'var(--on-bg)' }}>Últimos lançamentos</h3>
+            <Link href="/transactions" onClick={startNav} className="hk-pressable text-sm" style={{ color: 'var(--on-bg)' }}>Ver todos</Link>
           </div>
 
           {transactions.length === 0 ? (
-            <div className="rounded-2xl p-8 text-center" style={{ background: 'rgba(255,255,255,0.45)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,232,241,0.6)' }}>
-              <p className="text-4xl mb-2">🎀</p>
-              <p className="text-sm" style={{ color: '#8B6B7A' }}>Nenhum lançamento este mês</p>
-              <Link href="/transactions/new" onClick={startNav} className="hk-pressable text-sm font-semibold" style={{ color: '#FF6B9D' }}>
+            <div className="rounded-2xl p-8 text-center" style={{ ...glassCard }}>
+              <p className="text-4xl mb-2">{theme.hasBow ? '🎀' : '📭'}</p>
+              <p className="text-sm" style={{ color: 'var(--on-bg-sub)' }}>Nenhum lançamento este mês</p>
+              <Link href="/transactions/new" onClick={startNav} className="hk-pressable text-sm font-semibold" style={{ color: 'var(--primary)' }}>
                 Adicionar agora
               </Link>
             </div>
@@ -373,8 +447,9 @@ export default function DashboardPage() {
                 <div
                   key={tx.id}
                   className="rounded-2xl p-4 flex items-center justify-between"
-                  style={{ background: '#FFFFFF', border: '1px solid #FFE8F1' }}
+                  style={{ ...glassCard, position: 'relative', overflow: 'hidden' }}
                 >
+                  <div style={{ position: 'absolute', right: -16, bottom: -16, width: 70, height: 70, borderRadius: '50%', background: tx.type === 'income' ? '#E8F7EF' : tx.type === 'transfer' ? '#EBF5FF' : '#FFF0F0', opacity: 0.7, pointerEvents: 'none' }} />
                   <div className="flex items-center gap-3">
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
@@ -383,8 +458,8 @@ export default function DashboardPage() {
                       {tx.type === 'transfer' ? '↔️' : (tx.category?.icon ?? '✨')}
                     </div>
                     <div>
-                      <p className="font-semibold text-sm leading-tight" style={{ color: '#3d1a2e' }}>{tx.description}</p>
-                      <p className="text-xs" style={{ color: '#8B6B7A' }}>
+                      <p className="font-semibold text-sm leading-tight" style={{ color: 'var(--on-bg)' }}>{tx.description}</p>
+                      <p className="text-xs" style={{ color: 'var(--on-bg-sub)' }}>
                         {formatDateShort(tx.date)} · {tx.type === 'transfer' ? 'Transferência' : tx.category?.name}
                       </p>
                     </div>
@@ -404,12 +479,12 @@ export default function DashboardPage() {
         {/* Empty state for new users */}
         {accounts.length === 0 && cards.length === 0 && (
           <Card
-            style={{ borderRadius: 20, border: '1.5px solid rgba(255,232,241,0.6)', background: 'rgba(255,255,255,0.45)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+            style={{ borderRadius: 20, ...glassCard }}
           >
             <div className="text-center py-4">
-              <p className="text-5xl mb-3">🎀</p>
-              <p className="font-bold text-base mb-1" style={{ color: '#3d1a2e' }}>Bem-vinda ao HK Finance!</p>
-              <p className="text-sm mb-4" style={{ color: '#8B6B7A' }}>Comece cadastrando uma conta ou cartão para organizar suas finanças com estilo 💕</p>
+              <p className="text-5xl mb-3">{theme.hasBow ? '🎀' : theme.emoji}</p>
+              <p className="font-bold text-base mb-1" style={{ color: 'var(--on-bg)' }}>Bem-vindo(a) ao app!</p>
+              <p className="text-sm mb-4" style={{ color: 'var(--on-bg-sub)' }}>Comece cadastrando uma conta ou cartão para organizar suas finanças com estilo 💕</p>
               <div className="flex gap-2 justify-center">
                 <Link href="/accounts">
                   <button

@@ -7,6 +7,7 @@ import 'dayjs/locale/pt-br'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
 import PageHeader from '@/components/ui/PageHeader'
+import { useTheme } from '@/lib/theme-context'
 
 dayjs.locale('pt-br')
 
@@ -21,6 +22,7 @@ interface CategoryTotal {
 }
 
 export default function ReportsPage() {
+  const { theme } = useTheme()
   const [currentMonth, setCurrentMonth] = useState(dayjs())
   const [loading, setLoading] = useState(true)
   const [expenseByCategory, setExpenseByCategory] = useState<CategoryTotal[]>([])
@@ -104,31 +106,31 @@ export default function ReportsPage() {
         <button
           onClick={() => setCurrentMonth(m => m.subtract(1, 'month'))}
           className="w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255,107,157,0.08)', border: 'none', cursor: 'pointer' }}
+          style={{ background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer' }}
         >
-          <ChevronLeft size={18} style={{ color: '#FF6B9D' }} />
+          <ChevronLeft size={18} style={{ color: 'var(--on-bg)' }} />
         </button>
-        <p className="font-bold text-sm capitalize" style={{ color: '#3d1a2e' }}>
+        <p className="font-bold text-sm capitalize" style={{ color: 'var(--on-bg)' }}>
           {currentMonth.format('MMMM [de] YYYY')}
         </p>
         <button
           onClick={() => setCurrentMonth(m => m.add(1, 'month'))}
           className="w-9 h-9 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255,107,157,0.08)', border: 'none', cursor: 'pointer' }}
+          style={{ background: 'rgba(255,255,255,0.18)', border: 'none', cursor: 'pointer' }}
         >
-          <ChevronRight size={18} style={{ color: '#FF6B9D' }} />
+          <ChevronRight size={18} style={{ color: 'var(--on-bg)' }} />
         </button>
       </div>
 
       {/* Tab */}
       <div className="px-4 pb-3">
-        <div style={{ display: 'flex', background: '#FFE8F1', borderRadius: 16, padding: 4, gap: 4 }}>
+        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.22)', borderRadius: 16, padding: 4, gap: 4, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.35)' }}>
           <button
             onClick={() => setTab('expense')}
             style={{
               flex: 1, height: 40, borderRadius: 12,
               background: tab === 'expense' ? '#FF6B6B' : 'transparent',
-              color: tab === 'expense' ? 'white' : '#8B6B7A',
+              color: tab === 'expense' ? 'white' : 'var(--on-bg)',
               border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
               transition: 'all 0.18s ease',
             }}
@@ -140,7 +142,7 @@ export default function ReportsPage() {
             style={{
               flex: 1, height: 40, borderRadius: 12,
               background: tab === 'income' ? '#4CAF82' : 'transparent',
-              color: tab === 'income' ? 'white' : '#8B6B7A',
+              color: tab === 'income' ? 'white' : 'var(--on-bg)',
               border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
               transition: 'all 0.18s ease',
             }}
@@ -153,12 +155,12 @@ export default function ReportsPage() {
       <div className="px-4 pb-24 flex flex-col gap-4">
         {loading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} style={{ height: 64, borderRadius: 16, background: '#FFE8F1', animation: 'pulse 1.5s infinite' }} />
+            <div key={i} style={{ height: 64, borderRadius: 16, background: 'rgba(255,255,255,0.25)', animation: 'pulse 1.5s infinite' }} />
           ))
         ) : list.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <span className="text-5xl mb-3">🎀</span>
-            <p className="font-semibold text-sm" style={{ color: '#3d1a2e' }}>Sem lançamentos este mês</p>
+            <span className="text-5xl mb-3">{theme.hasBow ? '🎀' : '📊'}</span>
+            <p className="font-semibold text-sm" style={{ color: 'var(--on-bg)' }}>Sem lançamentos este mês</p>
           </div>
         ) : (
           <>

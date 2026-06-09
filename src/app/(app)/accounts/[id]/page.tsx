@@ -6,6 +6,7 @@ import { Button, Skeleton } from 'antd'
 import { ArrowLeft, TrendingUp, TrendingDown, ArrowLeftRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDateShort, getAccountTypeLabel } from '@/lib/utils'
+import { useTheme } from '@/lib/theme-context'
 import type { Account, Transaction } from '@/types'
 
 const TYPE_EMOJI: Record<string, string> = {
@@ -34,6 +35,7 @@ export default function AccountDetailPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const { theme } = useTheme()
 
   useEffect(() => { load() }, [id])
 
@@ -104,6 +106,11 @@ export default function AccountDetailPage() {
     <div className="page-enter">
       {/* Header */}
       <div className="hk-gradient px-4 pt-10 pb-6 relative overflow-hidden">
+        {/* Decorative circles */}
+        <div style={{ position: 'absolute', right: -60, top: -60, width: 240, height: 240, borderRadius: '50%', background: 'rgba(255,255,255,0.10)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', left: -40, bottom: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
+        {/* Shine overlay */}
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.13) 0%, transparent 55%)', pointerEvents: 'none' }} />
         <div className="absolute inset-0 opacity-10 text-8xl flex items-end justify-end pr-4 pb-2 pointer-events-none">
           {typeEmoji}
         </div>
@@ -163,15 +170,15 @@ export default function AccountDetailPage() {
 
       {/* Transactions list */}
       <div className="px-4 py-4">
-        <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-bg-sub)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
           Transações ({transactions.length})
         </p>
 
         {transactions.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <span style={{ fontSize: 48 }}>📭</span>
-            <p style={{ color: 'var(--dark)', fontWeight: 600, marginTop: 12, marginBottom: 4 }}>Nenhuma transação</p>
-            <p style={{ color: 'var(--gray)', fontSize: 13 }}>Esta conta ainda não tem movimentações</p>
+            <span style={{ fontSize: 48 }}>{theme.hasBow ? '🎀' : '📭'}</span>
+            <p style={{ color: 'var(--on-bg)', fontWeight: 600, marginTop: 12, marginBottom: 4 }}>Nenhuma transação</p>
+            <p style={{ color: 'var(--on-bg-sub)', fontSize: 13 }}>Esta conta ainda não tem movimentações</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -186,11 +193,14 @@ export default function AccountDetailPage() {
                   className="hk-card-hover"
                   onClick={() => router.push(`/transactions/${tx.id}/edit`)}
                   style={{
-                    background: 'white', borderRadius: 14, padding: '12px 14px',
-                    border: '1px solid var(--border-light)',
+                    background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+                    borderRadius: 14, padding: '12px 14px',
+                    border: '1px solid rgba(255,255,255,0.9)',
                     display: 'flex', alignItems: 'center', gap: 12,
+                    position: 'relative', overflow: 'hidden',
                   }}
                 >
+                  <div style={{ position: 'absolute', right: -12, bottom: -12, width: 60, height: 60, borderRadius: '50%', background: tx.type === 'income' ? '#E8F7EF' : tx.type === 'transfer' ? '#EBF5FF' : '#FFF0F0', opacity: 0.7, pointerEvents: 'none' }} />
                   <TxIcon type={tx.type} />
 
                   <div style={{ flex: 1, minWidth: 0 }}>
