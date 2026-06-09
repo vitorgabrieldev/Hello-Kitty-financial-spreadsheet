@@ -2,6 +2,11 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Deixa o route handler do PKCE rodar sem interferência
+  if (request.nextUrl.pathname.startsWith('/auth/callback')) {
+    return NextResponse.next()
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -23,17 +28,9 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const code = request.nextUrl.searchParams.get('code')
-  if (code && !request.nextUrl.pathname.startsWith('/auth/callback')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/auth/callback'
-    return NextResponse.redirect(url)
-  }
-
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
-    request.nextUrl.pathname.startsWith('/auth')
+  const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
 
   if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone()
