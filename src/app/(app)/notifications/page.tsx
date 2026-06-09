@@ -44,7 +44,9 @@ export default function NotificationsPage() {
 
   async function markRead(id: string) {
     const supabase = createClient()
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    await supabase.from('notifications').update({ is_read: true }).eq('id', id).eq('user_id', user.id)
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
   }
 

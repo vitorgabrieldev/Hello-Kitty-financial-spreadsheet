@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDateShort, getCurrentMonthRange } from '@/lib/utils'
 import { useNavigation } from '@/lib/navigation-context'
-import type { Transaction, Notification, Account, Card as CardType, Profile } from '@/types'
+import type { Transaction, Notification, Account, Card as CardType, Profile, Debt } from '@/types'
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [allMonthTx, setAllMonthTx] = useState<{ type: string; amount: number; is_paid: boolean }[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [debts, setDebts] = useState<Debt[]>([])
   const [loading, setLoading] = useState(true)
   const { startNav } = useNavigation()
 
@@ -30,19 +31,18 @@ export default function DashboardPage() {
 
     const { start, end } = getCurrentMonthRange()
 
-    const [profileRes, accountsRes, cardsRes, allTxRes, recentTxRes, notifRes] = await Promise.all([
+    const [profileRes, accountsRes, cardsRes, allTxRes, recentTxRes, notifRes, debtsRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('user_id', user.id).single(),
       supabase.from('accounts').select('*').eq('user_id', user.id).eq('is_active', true),
       supabase.from('cards').select('*').eq('user_id', user.id).eq('is_active', true),
-      // todos do mês para calcular os totais corretamente
       supabase.from('transactions').select('type, amount, is_paid')
         .eq('user_id', user.id).gte('date', start).lte('date', end),
-      // só os 5 mais recentes para exibição
       supabase.from('transactions').select('*, category:categories(*)')
         .eq('user_id', user.id).gte('date', start).lte('date', end)
         .order('date', { ascending: false }).limit(5),
       supabase.from('notifications').select('*')
         .eq('user_id', user.id).eq('is_read', false).limit(5),
+      supabase.from('debts').select('*').eq('user_id', user.id).eq('status', 'active').order('due_date', { ascending: true }),
     ])
 
     setProfile(profileRes.data)
@@ -51,6 +51,7 @@ export default function DashboardPage() {
     setAllMonthTx(allTxRes.data ?? [])
     setTransactions(recentTxRes.data ?? [])
     setNotifications(notifRes.data ?? [])
+    setDebts(debtsRes.data ?? [])
     setLoading(false)
   }
 
@@ -279,6 +280,43 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Debts */}
+        {debts.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-base" style={{ color: '#3d1a2e' }}>Dívidas ativas</h3>
+              <Link href="/debts" onClick={startNav} className="hk-pressable text-sm" style={{ color: '#FF6B9D' }}>Ver todas</Link>
+            </div>
+            <div style={{ background: 'white', border: '1px solid #FFE8F1', borderRadius: 20, overflow: 'hidden' }}>
+              {debts.slice(0, 3).map((debt, i) => {
+                const remaining = debt.total_amount - debt.paid_amount
+                const progress = Math.min((debt.paid_amount / debt.total_amount) * 100, 100)
+                return (
+                  <div key={debt.id} style={{ padding: '12px 16px', borderBottom: i < Math.min(debts.length, 3) - 1 ? '1px solid #FFE8F1' : 'none' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: debt.color || '#9B59B6', flexShrink: 0 }} />
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#3d1a2e' }}>{debt.name}</span>
+                      </div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#FF6B6B' }}>{formatCurrency(remaining)}</span>
+                    </div>
+                    <div style={{ height: 4, borderRadius: 99, background: '#FFE8F1', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', borderRadius: 99, background: debt.color || '#9B59B6', width: `${progress}%`, transition: 'width 0.4s ease' }} />
+                    </div>
+                  </div>
+                )
+              })}
+              {debts.length > 3 && (
+                <div style={{ padding: '10px 16px', textAlign: 'center', borderTop: '1px solid #FFE8F1' }}>
+                  <Link href="/debts" onClick={startNav} style={{ fontSize: 12, color: '#FF6B9D', fontWeight: 600 }}>
+                    +{debts.length - 3} dívida{debts.length - 3 > 1 ? 's' : ''} a mais
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Accounts */}
         {accounts.length > 0 && (

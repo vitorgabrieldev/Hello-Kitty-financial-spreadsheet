@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Avatar, Button, App, Drawer, Form } from 'antd'
-import { LogOut, User, ChevronRight, Pencil, MapPin } from 'lucide-react'
+import { LogOut, User, ChevronRight, Pencil, MapPin, Camera } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/types'
@@ -72,8 +72,9 @@ function StyledTextarea({ value, onChange, placeholder }: {
 export default function SettingsPage() {
   const [profile, setProfile]         = useState<Profile | null>(null)
   const [userEmail, setUserEmail]     = useState('')
-  const [drawerOpen, setDrawerOpen]   = useState(false)
-  const [loadingCep, setLoadingCep]   = useState(false)
+  const [drawerOpen, setDrawerOpen]     = useState(false)
+  const [loadingCep, setLoadingCep]     = useState(false)
+  const [loadingAvatar, setLoadingAvatar] = useState(false)
   const [maritalStatus, setMaritalStatus] = useState('')
   const [form] = Form.useForm()
   const { modal, message } = App.useApp()
@@ -125,6 +126,46 @@ export default function SettingsPage() {
     finally { setLoadingCep(false) }
   }
 
+  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { message.error('Imagem deve ter no máximo 2MB'); return }
+
+    setLoadingAvatar(true)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+      const path = `${user.id}/avatar.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true, contentType: file.type })
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+      const avatarUrl = `${publicUrl}?t=${Date.now()}`
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: avatarUrl })
+        .eq('user_id', user.id)
+
+      if (updateError) throw updateError
+
+      message.success('Foto atualizada! 🎀')
+      load()
+    } catch {
+      message.error('Erro ao enviar foto. Verifique se o bucket "avatars" está configurado no Supabase.')
+    } finally {
+      setLoadingAvatar(false)
+      e.target.value = ''
+    }
+  }
+
   async function handleSaveProfile() {
     const values = await form.validateFields()
     const supabase = createClient()
@@ -172,18 +213,25 @@ export default function SettingsPage() {
               style={{ background: 'rgba(255,255,255,0.3)', border: '3px solid rgba(255,255,255,0.6)' }}
               icon={<User size={28} />}
             />
-            <button
-              onClick={openEditProfile}
+            <label
               style={{
                 position: 'absolute', bottom: -2, right: -2,
                 width: 22, height: 22, borderRadius: '50%',
-                background: 'white', border: '2px solid #FF6B9D',
+                background: loadingAvatar ? '#FFB3D1' : 'white',
+                border: '2px solid #FF6B9D',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', padding: 0,
+                cursor: loadingAvatar ? 'not-allowed' : 'pointer', padding: 0,
               }}
             >
-              <Pencil size={11} style={{ color: '#FF6B9D' }} />
-            </button>
+              <Camera size={11} style={{ color: '#FF6B9D' }} />
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleAvatarUpload}
+                disabled={loadingAvatar}
+                style={{ display: 'none' }}
+              />
+            </label>
           </div>
           <div>
             <p className="text-white font-bold text-lg leading-tight">{profile?.name ?? 'Carregando...'}</p>

@@ -212,8 +212,10 @@ export default function EditTransactionPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [cards, setCards] = useState<Card[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadingMarkAll, setLoadingMarkAll] = useState(false)
   const [initializing, setInitializing] = useState(true)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [remainingInstallments, setRemainingInstallments] = useState(0)
 
   const [picker, setPicker] = useState<'category' | 'account' | 'card' | 'date' | 'paid_at' | 'recurrence' | null>(null)
 
@@ -235,6 +237,15 @@ export default function EditTransactionPage() {
 
     const tx = txRes.data as Transaction
     setOriginal(tx)
+
+    if (tx.is_installment && tx.installment_group_id) {
+      const { count } = await supabase
+        .from('transactions')
+        .select('*', { count: 'exact', head: true })
+        .eq('installment_group_id', tx.installment_group_id)
+        .eq('is_paid', false)
+      setRemainingInstallments(count ?? 0)
+    }
     setAmount(tx.amount)
     setDescription(tx.description)
     setDate(tx.date)
@@ -294,6 +305,29 @@ export default function EditTransactionPage() {
     }
   }
 
+  async function handleMarkAllPaid() {
+    if (!original?.installment_group_id) return
+    setLoadingMarkAll(true)
+    try {
+      const supabase = createClient()
+      const today = new Date()
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      const { error } = await supabase
+        .from('transactions')
+        .update({ is_paid: true, paid_at: todayStr })
+        .eq('installment_group_id', original.installment_group_id)
+        .eq('is_paid', false)
+      if (error) throw error
+      message.success('Todas as parcelas marcadas como pagas 🎀')
+      setRemainingInstallments(0)
+      setIsPaid(true)
+    } catch {
+      message.error('Erro ao atualizar parcelas')
+    } finally {
+      setLoadingMarkAll(false)
+    }
+  }
+
   const filteredCategories = categories.filter(c => {
     if (original?.type === 'income') return c.type === 'income' || c.type === 'both'
     return c.type === 'expense' || c.type === 'both'
@@ -338,6 +372,45 @@ export default function EditTransactionPage() {
           <div style={{ background: 'rgba(52,152,219,0.06)', border: '1px solid rgba(52,152,219,0.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontSize: 18 }}>↔️</span>
             <span style={{ fontSize: 13, color: '#3498DB', fontWeight: 600 }}>Transferência entre contas</span>
+          </div>
+        )}
+
+        {/* Banner de parcela */}
+        {original?.is_installment && original.installment_total && original.installment_current && (
+          <div style={{ background: 'rgba(255,107,157,0.06)', border: '1px solid #FFE8F1', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 16 }}>📆</span>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#3d1a2e', margin: 0 }}>
+                    Parcela {original.installment_current} de {original.installment_total}
+                  </p>
+                  {remainingInstallments > 0 && (
+                    <p style={{ fontSize: 11, color: '#8B6B7A', margin: '2px 0 0' }}>
+                      {remainingInstallments} parcela{remainingInstallments > 1 ? 's' : ''} pendente{remainingInstallments > 1 ? 's' : ''}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {remainingInstallments > 0 && (
+                <button
+                  type="button"
+                  onClick={handleMarkAllPaid}
+                  disabled={loadingMarkAll}
+                  style={{
+                    padding: '6px 12px', borderRadius: 20,
+                    background: loadingMarkAll ? '#FFE8F1' : '#FF6B9D',
+                    color: 'white', border: 'none', cursor: loadingMarkAll ? 'not-allowed' : 'pointer',
+                    fontSize: 11, fontWeight: 700, flexShrink: 0,
+                  }}
+                >
+                  {loadingMarkAll ? '...' : 'Quitar todas ✓'}
+                </button>
+              )}
+              {remainingInstallments === 0 && (
+                <span style={{ fontSize: 12, color: '#4CAF82', fontWeight: 700 }}>Tudo pago ✓</span>
+              )}
+            </div>
           </div>
         )}
 

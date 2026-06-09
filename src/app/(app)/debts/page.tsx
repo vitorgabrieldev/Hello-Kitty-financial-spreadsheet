@@ -260,7 +260,7 @@ export default function DebtsPage() {
       if (editing) {
         // recalcula status ao editar
         const newStatus = editing.paid_amount >= totalAmount ? 'paid' : 'active'
-        const { error } = await supabase.from('debts').update({ ...payload, status: newStatus }).eq('id', editing.id)
+        const { error } = await supabase.from('debts').update({ ...payload, status: newStatus }).eq('id', editing.id).eq('user_id', user.id)
         if (error) throw error
         message.success('Dívida atualizada! 🎀')
       } else {
@@ -286,7 +286,9 @@ export default function DebtsPage() {
       cancelText: 'Cancelar',
       onOk: async () => {
         const supabase = createClient()
-        const { error } = await supabase.from('debts').delete().eq('id', debt.id)
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { error } = await supabase.from('debts').delete().eq('id', debt.id).eq('user_id', user.id)
         if (error) { message.error('Erro ao excluir'); return }
         message.success('Dívida excluída')
         load()

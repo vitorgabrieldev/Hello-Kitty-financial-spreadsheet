@@ -95,7 +95,7 @@ export default function CategoriesPage() {
     const payload = { name: values.name, icon: selectedEmoji, color: selectedColor, type: selectedType }
 
     if (editing) {
-      const { error } = await supabase.from('categories').update(payload).eq('id', editing.id)
+      const { error } = await supabase.from('categories').update(payload).eq('id', editing.id).eq('user_id', user.id)
       if (error) { message.error('Erro ao atualizar'); return }
       message.success('Categoria atualizada! 🎀')
     } else {
@@ -116,7 +116,9 @@ export default function CategoriesPage() {
       cancelText: 'Cancelar',
       onOk: async () => {
         const supabase = createClient()
-        const { error } = await supabase.from('categories').delete().eq('id', cat.id)
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        const { error } = await supabase.from('categories').delete().eq('id', cat.id).eq('user_id', user.id)
         if (error) { message.error('Erro ao excluir categoria'); return }
         setCategories(prev => prev.filter(c => c.id !== cat.id))
         setDrawerOpen(false)

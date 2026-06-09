@@ -370,6 +370,7 @@ function NewTransactionForm() {
           .from('debts')
           .update({ paid_amount: newPaid, status: newStatus })
           .eq('id', debtId)
+          .eq('user_id', user.id)
         if (debtError) throw debtError
 
         if (newStatus === 'paid') {

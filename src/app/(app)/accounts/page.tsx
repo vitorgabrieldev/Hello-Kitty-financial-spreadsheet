@@ -188,7 +188,7 @@ export default function AccountsPage() {
     if (!user) return
 
     if (editing) {
-      const { error } = await supabase.from('accounts').update(values).eq('id', editing.id)
+      const { error } = await supabase.from('accounts').update(values).eq('id', editing.id).eq('user_id', user.id)
       if (error) { message.error('Erro ao atualizar'); return }
       message.success('Conta atualizada!')
     } else {
@@ -209,7 +209,9 @@ export default function AccountsPage() {
       cancelText: 'Cancelar',
       onOk: async () => {
         const supabase = createClient()
-        await supabase.from('accounts').delete().eq('id', account.id)
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        await supabase.from('accounts').delete().eq('id', account.id).eq('user_id', user.id)
         message.success('Conta excluída')
         load()
       },

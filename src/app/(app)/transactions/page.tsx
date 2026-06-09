@@ -96,11 +96,12 @@ export default function TransactionsPage() {
       cancelText: 'Cancelar',
       onOk: async () => {
         const supabase = createClient()
-        // se for transferência, exclui também o espelho
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
         if (tx.transfer_peer_id) {
-          await supabase.from('transactions').delete().eq('id', tx.transfer_peer_id)
+          await supabase.from('transactions').delete().eq('id', tx.transfer_peer_id).eq('user_id', user.id)
         }
-        await supabase.from('transactions').delete().eq('id', tx.id)
+        await supabase.from('transactions').delete().eq('id', tx.id).eq('user_id', user.id)
         message.success('Lançamento excluído')
         setSelected(null)
         load()
@@ -110,6 +111,8 @@ export default function TransactionsPage() {
 
   async function handleTogglePaid(tx: Transaction) {
     const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
     const today = new Date()
     const iso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
     const nowPaid = !tx.is_paid
@@ -117,6 +120,7 @@ export default function TransactionsPage() {
       .from('transactions')
       .update({ is_paid: nowPaid, paid_at: nowPaid ? iso : null })
       .eq('id', tx.id)
+      .eq('user_id', user.id)
     if (error) { message.error('Erro ao atualizar'); return }
     message.success(nowPaid ? 'Marcado como pago ✅' : 'Desmarcado como pendente ⏳')
     setSelected(prev => prev ? { ...prev, is_paid: nowPaid, paid_at: nowPaid ? iso : undefined } : null)

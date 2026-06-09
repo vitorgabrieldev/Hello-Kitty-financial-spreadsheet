@@ -50,7 +50,7 @@ export default function CardsPage() {
     if (!user) return
 
     if (editing) {
-      const { error } = await supabase.from('cards').update(values).eq('id', editing.id)
+      const { error } = await supabase.from('cards').update(values).eq('id', editing.id).eq('user_id', user.id)
       if (error) { message.error('Erro ao atualizar'); return }
       message.success('Cartão atualizado!')
     } else {
@@ -72,7 +72,9 @@ export default function CardsPage() {
       cancelText: 'Cancelar',
       onOk: async () => {
         const supabase = createClient()
-        await supabase.from('cards').delete().eq('id', card.id)
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+        await supabase.from('cards').delete().eq('id', card.id).eq('user_id', user.id)
         message.success('Cartão excluído')
         load()
       },
