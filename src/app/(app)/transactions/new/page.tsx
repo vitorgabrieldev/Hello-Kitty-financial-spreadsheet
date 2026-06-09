@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { App } from 'antd'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
 import type { Category, Account, Card, Debt, RecurrenceFrequency } from '@/types'
@@ -210,26 +210,47 @@ const RECURRENCE_OPTIONS: { value: RecurrenceFrequency; label: string }[] = [
   { value: 'yearly',    label: 'Anual' },
 ]
 
-type TxType = 'expense' | 'income' | 'debt_payment'
+type TxType = 'expense' | 'income' | 'debt_payment' | 'transfer'
 
 const TYPE_OPTIONS: { value: TxType; label: string; color: string }[] = [
-  { value: 'expense',      label: '💸 Gasto',             color: '#FF6B6B' },
-  { value: 'income',       label: '💰 Receita',            color: '#4CAF82' },
-  { value: 'debt_payment', label: '💳 Pagar dívida',       color: '#9B59B6' },
+  { value: 'expense',      label: '💸 Gasto',           color: '#FF6B6B' },
+  { value: 'income',       label: '💰 Receita',          color: '#4CAF82' },
+  { value: 'debt_payment', label: '💳 Pagar dívida',     color: '#9B59B6' },
+  { value: 'transfer',     label: '↔️ Transferência',    color: '#3498DB' },
 ]
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function NewTransactionPage() {
+  return (
+    <Suspense>
+      <NewTransactionForm />
+    </Suspense>
+  )
+}
+
+function NewTransactionForm() {
   const router = useRouter()
   const { message } = App.useApp()
+  const searchParams = useSearchParams()
 
-  const [type, setType] = useState<TxType>('expense')
+  function resolveType(p: string | null): TxType {
+    return (['expense', 'income', 'debt_payment', 'transfer'] as TxType[]).includes(p as TxType)
+      ? (p as TxType)
+      : 'expense'
+  }
+
+  const [type, setType] = useState<TxType>(() => resolveType(searchParams.get('type')))
+
+  useEffect(() => {
+    setType(resolveType(searchParams.get('type')))
+  }, [searchParams])
   const [amount, setAmount] = useState(0)
   const [description, setDescription] = useState('')
   const [date, setDate] = useState(todayISO())
   const [notes, setNotes] = useState('')
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [accountId, setAccountId] = useState<string | null>(null)
+  const [toAccountId, setToAccountId] = useState<string | null>(null)
   const [cardId, setCardId] = useState<string | null>(null)
   const [debtId, setDebtId] = useState<string | null>(null)
   const [installmentTotal, setInstallmentTotal] = useState<number | null>(null)
@@ -247,7 +268,7 @@ export default function NewTransactionPage() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const [picker, setPicker] = useState<'category' | 'account' | 'card' | 'installments' | 'date' | 'paid_at' | 'debt' | 'recurrence' | null>(null)
+  const [picker, setPicker] = useState<'category' | 'account' | 'to_account' | 'card' | 'installments' | 'date' | 'paid_at' | 'debt' | 'recurrence' | null>(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -270,9 +291,15 @@ export default function NewTransactionPage() {
   function validate() {
     const e: Record<string, string> = {}
     if (!amount || amount <= 0) e.amount = 'Informe um valor maior que zero'
-    if (type !== 'debt_payment' && !description.trim()) e.description = 'Informe a descrição'
-    if (type !== 'debt_payment' && !categoryId) e.category = 'Selecione uma categoria'
-    if (type === 'debt_payment' && !debtId) e.debt = 'Selecione a dívida'
+    if (type === 'transfer') {
+      if (!accountId) e.account = 'Selecione a conta de origem'
+      if (!toAccountId) e.to_account = 'Selecione a conta de destino'
+      if (accountId && toAccountId && accountId === toAccountId) e.to_account = 'Contas devem ser diferentes'
+    } else {
+      if (type !== 'debt_payment' && !description.trim()) e.description = 'Informe a descrição'
+      if (type !== 'debt_payment' && !categoryId) e.category = 'Selecione uma categoria'
+      if (type === 'debt_payment' && !debtId) e.debt = 'Selecione a dívida'
+    }
     if (!date) e.date = 'Informe a data'
     if (isInstallment && !installmentTotal) e.installments = 'Selecione o número de parcelas'
     setErrors(e)
@@ -287,7 +314,35 @@ export default function NewTransactionPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      if (type === 'debt_payment') {
+      if (type === 'transfer') {
+        const defaultCatId = await getDefaultCategoryId(supabase, user.id)
+        // Insere saída (expense na conta origem)
+        const { data: txOut, error: outErr } = await supabase.from('transactions').insert({
+          user_id: user.id, type: 'transfer', amount,
+          description: description.trim() || `Transferência para ${accounts.find(a => a.id === toAccountId)?.name ?? ''}`,
+          date, category_id: defaultCatId,
+          account_id: accountId, is_installment: false, is_recurring: false,
+          is_paid: true, paid_at: date, notes: notes.trim() || null,
+        }).select('id').single()
+        if (outErr) throw outErr
+
+        // Insere entrada (income na conta destino)
+        const { data: txIn, error: inErr } = await supabase.from('transactions').insert({
+          user_id: user.id, type: 'transfer', amount,
+          description: description.trim() || `Transferência de ${accounts.find(a => a.id === accountId)?.name ?? ''}`,
+          date, category_id: defaultCatId,
+          account_id: toAccountId, is_installment: false, is_recurring: false,
+          is_paid: true, paid_at: date, notes: notes.trim() || null,
+        }).select('id').single()
+        if (inErr) throw inErr
+
+        // Liga as duas via transfer_peer_id
+        await Promise.all([
+          supabase.from('transactions').update({ transfer_peer_id: txIn!.id }).eq('id', txOut!.id),
+          supabase.from('transactions').update({ transfer_peer_id: txOut!.id }).eq('id', txIn!.id),
+        ])
+        message.success('Transferência registrada! ↔️')
+      } else if (type === 'debt_payment') {
         const selectedDebt = debts.find(d => d.id === debtId)!
         const newPaid = Math.min(selectedDebt.paid_amount + amount, selectedDebt.total_amount)
         const newStatus = newPaid >= selectedDebt.total_amount ? 'paid' : 'active'
@@ -386,11 +441,11 @@ export default function NewTransactionPage() {
     setCategoryId(null)
     setCardId(null)
     setDebtId(null)
+    setToAccountId(null)
     setIsInstallment(false)
     setInstallmentTotal(null)
     setErrors({})
-    // receita sempre é "paga"
-    if (t === 'income') { setIsPaid(true); setPaidAt('') }
+    if (t === 'income' || t === 'transfer') { setIsPaid(true); setPaidAt('') }
     else { setIsPaid(false); setPaidAt('') }
     setIsRecurring(false)
     setRecurrenceFrequency('monthly')
@@ -402,6 +457,7 @@ export default function NewTransactionPage() {
   })
   const selectedCategory = categories.find(c => c.id === categoryId)
   const selectedAccount = accounts.find(a => a.id === accountId)
+  const selectedToAccount = accounts.find(a => a.id === toAccountId)
   const selectedCard = cards.find(c => c.id === cardId)
   const selectedDebt = debts.find(d => d.id === debtId)
   const activeType = TYPE_OPTIONS.find(t => t.value === type)!
@@ -409,7 +465,7 @@ export default function NewTransactionPage() {
   return (
     <div style={{ minHeight: '100dvh', background: '#FFF5F8' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 16px 12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '52px 16px 12px' }}>
         <button type="button" onClick={() => router.back()} style={{
           width: 40, height: 40, borderRadius: '50%',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -422,16 +478,15 @@ export default function NewTransactionPage() {
 
       {/* Type toggle */}
       <div style={{ padding: '0 16px 16px' }}>
-        <div style={{ display: 'flex', background: '#FFE8F1', borderRadius: 16, padding: 4, gap: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: 8, columnGap: 8 }}>
           {TYPE_OPTIONS.map(t => (
             <button key={t.value} type="button" onClick={() => switchType(t.value)} style={{
-              flex: 1, height: 44, borderRadius: 12,
+              height: 44, borderRadius: 12,
               background: type === t.value ? t.color : 'transparent',
               color: type === t.value ? 'white' : '#8B6B7A',
               border: 'none', cursor: 'pointer',
-              fontSize: 12, fontWeight: 700,
+              fontSize: 13, fontWeight: 700,
               transition: 'all 0.18s ease',
-              whiteSpace: 'nowrap',
             }}>
               {t.label}
             </button>
@@ -529,8 +584,40 @@ export default function NewTransactionPage() {
           </>
         )}
 
+        {/* Transferência entre contas */}
+        {type === 'transfer' && (
+          <>
+            <Field label="Valor" error={errors.amount}>
+              <CurrencyInput value={amount} onChange={v => { setAmount(v); setErrors(p => ({ ...p, amount: '' })) }} />
+            </Field>
+            <Field label="Conta de origem" error={errors.account}>
+              <PickerButton
+                label={selectedAccount ? `🏦 ${selectedAccount.name}` : undefined}
+                placeholder="Selecione a conta de origem..."
+                onOpen={() => setPicker('account')}
+              />
+            </Field>
+            <Field label="Conta de destino" error={errors.to_account}>
+              <PickerButton
+                label={selectedToAccount ? `🏦 ${selectedToAccount.name}` : undefined}
+                placeholder="Selecione a conta de destino..."
+                onOpen={() => setPicker('to_account')}
+              />
+            </Field>
+            <Field label="Data" error={errors.date}>
+              <PickerButton label={formatDateDisplay(date)} placeholder="Data..." onOpen={() => setPicker('date')} />
+            </Field>
+            <Field label="Descrição (opcional)">
+              <StyledInput value={description} onChange={e => setDescription(e.target.value)} placeholder="Ex: TED para reserva..." enterKeyHint="done" />
+            </Field>
+            <Field label="Observações (opcional)">
+              <StyledTextarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Anotações extras..." />
+            </Field>
+          </>
+        )}
+
         {/* Gasto / Receita */}
-        {type !== 'debt_payment' && (
+        {type !== 'debt_payment' && type !== 'transfer' && (
           <>
             <Field label="Valor" error={errors.amount}>
               <CurrencyInput value={amount} onChange={v => { setAmount(v); setErrors(p => ({ ...p, amount: '' })) }} />
@@ -733,7 +820,7 @@ export default function NewTransactionPage() {
             fontSize: 16, fontWeight: 700, marginTop: 8,
             transition: 'background 0.2s ease',
           }}>
-            {loading ? 'Salvando...' : type === 'debt_payment' ? 'Registrar pagamento 💳' : 'Salvar lançamento 🎀'}
+            {loading ? 'Salvando...' : type === 'debt_payment' ? 'Registrar pagamento 💳' : type === 'transfer' ? 'Confirmar transferência ↔️' : 'Salvar lançamento 🎀'}
           </button>
         )}
       </div>
@@ -757,7 +844,19 @@ export default function NewTransactionPage() {
             <PickerItem key={a.id}
               label={<><span style={{ fontSize: 20, marginRight: 10 }}>🏦</span>{a.name}</>}
               selected={accountId === a.id}
-              onClick={() => { setAccountId(a.id); setPicker(null) }}
+              onClick={() => { setAccountId(a.id); setErrors(p => ({ ...p, account: '' })); setPicker(null) }}
+            />
+          ))}
+        </PickerOverlay>
+      )}
+
+      {picker === 'to_account' && (
+        <PickerOverlay title="Conta de destino" onClose={() => setPicker(null)}>
+          {accounts.filter(a => a.id !== accountId).map(a => (
+            <PickerItem key={a.id}
+              label={<><span style={{ fontSize: 20, marginRight: 10 }}>🏦</span>{a.name}</>}
+              selected={toAccountId === a.id}
+              onClick={() => { setToAccountId(a.id); setErrors(p => ({ ...p, to_account: '' })); setPicker(null) }}
             />
           ))}
         </PickerOverlay>

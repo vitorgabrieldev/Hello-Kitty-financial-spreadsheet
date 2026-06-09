@@ -327,26 +327,44 @@ export default function EditTransactionPage() {
       {/* Form */}
       <div style={{ padding: '0 16px', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 32px)' }}>
 
+        {/* Tipo não editável — badge informativo */}
+        {original?.type === 'debt_payment' && (
+          <div style={{ background: 'rgba(155,89,182,0.06)', border: '1px solid rgba(155,89,182,0.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>💳</span>
+            <span style={{ fontSize: 13, color: '#9B59B6', fontWeight: 600 }}>Pagamento de dívida</span>
+          </div>
+        )}
+        {original?.type === 'transfer' && (
+          <div style={{ background: 'rgba(52,152,219,0.06)', border: '1px solid rgba(52,152,219,0.2)', borderRadius: 12, padding: '10px 14px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>↔️</span>
+            <span style={{ fontSize: 13, color: '#3498DB', fontWeight: 600 }}>Transferência entre contas</span>
+          </div>
+        )}
+
         <Field label="Valor" error={errors.amount}>
           <CurrencyInput value={amount} onChange={v => { setAmount(v); setErrors(p => ({ ...p, amount: '' })) }} />
         </Field>
 
-        <Field label="Descrição" error={errors.description}>
-          <StyledInput
-            value={description}
-            onChange={e => { setDescription(e.target.value); setErrors(p => ({ ...p, description: '' })) }}
-            placeholder="Ex: Mercado, Netflix, Salário..."
-            enterKeyHint="next"
-          />
-        </Field>
+        {original?.type !== 'debt_payment' && original?.type !== 'transfer' && (
+          <Field label="Descrição" error={errors.description}>
+            <StyledInput
+              value={description}
+              onChange={e => { setDescription(e.target.value); setErrors(p => ({ ...p, description: '' })) }}
+              placeholder="Ex: Mercado, Netflix, Salário..."
+              enterKeyHint="next"
+            />
+          </Field>
+        )}
 
-        <Field label="Categoria" error={errors.category}>
-          <PickerButton
-            label={selectedCategory ? `${selectedCategory.icon} ${selectedCategory.name}` : undefined}
-            placeholder="Selecione a categoria..."
-            onOpen={() => setPicker('category')}
-          />
-        </Field>
+        {original?.type !== 'debt_payment' && original?.type !== 'transfer' && (
+          <Field label="Categoria" error={errors.category}>
+            <PickerButton
+              label={selectedCategory ? `${selectedCategory.icon} ${selectedCategory.name}` : undefined}
+              placeholder="Selecione a categoria..."
+              onOpen={() => setPicker('category')}
+            />
+          </Field>
+        )}
 
         <Field label="Data" error={errors.date}>
           <PickerButton label={formatDateDisplay(date)} placeholder="Selecione a data..." onOpen={() => setPicker('date')} />
@@ -422,8 +440,8 @@ export default function EditTransactionPage() {
           </div>
         )}
 
-        {/* Recorrência */}
-        {!original?.is_installment && (
+        {/* Recorrência — só para expense/income não parcelado */}
+        {!original?.is_installment && original?.type !== 'debt_payment' && original?.type !== 'transfer' && (
           <div style={{ background: 'rgba(255,107,157,0.06)', border: '1px solid #FFE8F1', borderRadius: 14, padding: 14, marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>

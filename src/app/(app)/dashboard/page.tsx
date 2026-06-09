@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [cards, setCards] = useState<CardType[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [allMonthTx, setAllMonthTx] = useState<{ type: string; amount: number; is_paid: boolean }[]>([])
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const { startNav } = useNavigation()
@@ -29,10 +30,14 @@ export default function DashboardPage() {
 
     const { start, end } = getCurrentMonthRange()
 
-    const [profileRes, accountsRes, cardsRes, txRes, notifRes] = await Promise.all([
+    const [profileRes, accountsRes, cardsRes, allTxRes, recentTxRes, notifRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('user_id', user.id).single(),
       supabase.from('accounts').select('*').eq('user_id', user.id).eq('is_active', true),
       supabase.from('cards').select('*').eq('user_id', user.id).eq('is_active', true),
+      // todos do mês para calcular os totais corretamente
+      supabase.from('transactions').select('type, amount, is_paid')
+        .eq('user_id', user.id).gte('date', start).lte('date', end),
+      // só os 5 mais recentes para exibição
       supabase.from('transactions').select('*, category:categories(*)')
         .eq('user_id', user.id).gte('date', start).lte('date', end)
         .order('date', { ascending: false }).limit(5),
@@ -43,16 +48,18 @@ export default function DashboardPage() {
     setProfile(profileRes.data)
     setAccounts(accountsRes.data ?? [])
     setCards(cardsRes.data ?? [])
-    setTransactions(txRes.data ?? [])
+    setAllMonthTx(allTxRes.data ?? [])
+    setTransactions(recentTxRes.data ?? [])
     setNotifications(notifRes.data ?? [])
     setLoading(false)
   }
 
   const totalBalance   = accounts.reduce((s, a) => s + a.balance, 0)
-  const monthIncome    = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-  const monthExpense   = transactions.filter(t => t.type !== 'income').reduce((s, t) => s + t.amount, 0)
-  const monthPaid      = transactions.filter(t => t.type !== 'income' && t.is_paid).reduce((s, t) => s + t.amount, 0)
-  const monthPending   = transactions.filter(t => t.type !== 'income' && !t.is_paid).reduce((s, t) => s + t.amount, 0)
+  // usa allMonthTx para cálculos precisos (sem limit)
+  const monthIncome    = allMonthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+  const monthExpense   = allMonthTx.filter(t => t.type !== 'income').reduce((s, t) => s + t.amount, 0)
+  const monthPaid      = allMonthTx.filter(t => t.type !== 'income' && t.is_paid).reduce((s, t) => s + t.amount, 0)
+  const monthPending   = allMonthTx.filter(t => t.type !== 'income' && !t.is_paid).reduce((s, t) => s + t.amount, 0)
   const monthBalance   = monthIncome - monthExpense
 
   if (loading) {

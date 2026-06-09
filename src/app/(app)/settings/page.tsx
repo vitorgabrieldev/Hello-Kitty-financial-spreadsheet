@@ -153,7 +153,10 @@ export default function SettingsPage() {
   }
 
   const menuItems = [
-    { icon: '🏷️', label: 'Categorias', sub: 'Gerencie as categorias de gastos', onClick: () => router.push('/categories') },
+    { icon: '🏦', label: 'Contas',      sub: 'Gerencie suas contas bancárias',   onClick: () => router.push('/accounts') },
+    { icon: '💳', label: 'Cartões',     sub: 'Gerencie seus cartões de crédito', onClick: () => router.push('/cards') },
+    { icon: '🏷️', label: 'Categorias',  sub: 'Gerencie as categorias de gastos', onClick: () => router.push('/categories') },
+    { icon: '📊', label: 'Relatórios',  sub: 'Gastos e receitas por categoria',  onClick: () => router.push('/reports') },
   ]
 
   return (
