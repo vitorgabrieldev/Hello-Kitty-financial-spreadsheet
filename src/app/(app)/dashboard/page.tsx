@@ -48,9 +48,12 @@ export default function DashboardPage() {
     setLoading(false)
   }
 
-  const totalBalance = accounts.reduce((s, a) => s + a.balance, 0)
-  const monthIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-  const monthExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0)
+  const totalBalance   = accounts.reduce((s, a) => s + a.balance, 0)
+  const monthIncome    = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
+  const monthExpense   = transactions.filter(t => t.type !== 'income').reduce((s, t) => s + t.amount, 0)
+  const monthPaid      = transactions.filter(t => t.type !== 'income' && t.is_paid).reduce((s, t) => s + t.amount, 0)
+  const monthPending   = transactions.filter(t => t.type !== 'income' && !t.is_paid).reduce((s, t) => s + t.amount, 0)
+  const monthBalance   = monthIncome - monthExpense
 
   if (loading) {
     return (
@@ -218,6 +221,57 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Monthly summary */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-base" style={{ color: '#3d1a2e' }}>Resumo do mês</h3>
+            <Link href="/transactions" onClick={startNav} className="hk-pressable text-sm" style={{ color: '#FF6B9D' }}>Ver tudo</Link>
+          </div>
+          <div style={{ background: 'white', border: '1px solid #FFE8F1', borderRadius: 20, overflow: 'hidden' }}>
+            {/* Saldo previsto */}
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #FFE8F1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <p style={{ fontSize: 12, color: '#8B6B7A', margin: 0 }}>Saldo do mês</p>
+                <p style={{ fontSize: 18, fontWeight: 800, color: monthBalance >= 0 ? '#4CAF82' : '#FF6B6B', margin: 0 }}>
+                  {monthBalance >= 0 ? '+' : ''}{formatCurrency(monthBalance)}
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: 12, color: '#8B6B7A', margin: 0 }}>Receitas − Gastos</p>
+                <p style={{ fontSize: 12, color: '#3d1a2e', fontWeight: 600, margin: 0 }}>
+                  {formatCurrency(monthIncome)} − {formatCurrency(monthExpense)}
+                </p>
+              </div>
+            </div>
+            {/* Pago vs Pendente */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+              <div style={{ padding: '12px 16px', borderRight: '1px solid #FFE8F1' }}>
+                <p style={{ fontSize: 11, color: '#8B6B7A', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 600 }}>Pago</p>
+                <p style={{ fontSize: 15, fontWeight: 800, color: '#4CAF82', margin: 0 }}>{formatCurrency(monthPaid)}</p>
+              </div>
+              <div style={{ padding: '12px 16px' }}>
+                <p style={{ fontSize: 11, color: '#8B6B7A', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 0.8, fontWeight: 600 }}>Pendente</p>
+                <p style={{ fontSize: 15, fontWeight: 800, color: monthPending > 0 ? '#F39C12' : '#C4A0B0', margin: 0 }}>{formatCurrency(monthPending)}</p>
+              </div>
+            </div>
+            {/* Barra de progresso de gastos pagos */}
+            {monthExpense > 0 && (
+              <div style={{ padding: '0 16px 14px' }}>
+                <div style={{ height: 6, borderRadius: 99, background: '#FFE8F1', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', borderRadius: 99, background: '#4CAF82',
+                    width: `${Math.min((monthPaid / monthExpense) * 100, 100)}%`,
+                    transition: 'width 0.4s ease',
+                  }} />
+                </div>
+                <p style={{ fontSize: 11, color: '#C4A0B0', margin: '4px 0 0', textAlign: 'right' }}>
+                  {Math.round((monthPaid / monthExpense) * 100)}% dos gastos pagos
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Accounts */}
         {accounts.length > 0 && (

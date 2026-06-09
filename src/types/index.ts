@@ -82,6 +82,8 @@ export interface Category {
   created_at: string
 }
 
+export type RecurrenceFrequency = 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'yearly'
+
 export interface Transaction {
   id: string
   user_id: string
@@ -97,7 +99,11 @@ export interface Transaction {
   installment_current?: number
   installment_group_id?: string
   is_recurring: boolean
+  recurrence_frequency?: RecurrenceFrequency
+  recurrence_next_date?: string
+  recurrence_origin_id?: string
   is_paid: boolean
+  paid_at?: string
   debt_id?: string
   notes?: string
   created_at: string

@@ -1,6 +1,7 @@
 import BottomNav from '@/components/ui/BottomNav'
 import NavigationProgress from '@/components/ui/NavigationProgress'
 import Providers from '@/components/ui/Providers'
+import RecurringRunner from '@/components/ui/RecurringRunner'
 import { NavigationProvider } from '@/lib/navigation-context'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -20,6 +21,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             zIndex: 0,
           }}
         />
+        <RecurringRunner />
         <div className="min-h-screen pb-nav" style={{ position: 'relative', zIndex: 1 }}>
           <main className="max-w-lg mx-auto">
             {children}

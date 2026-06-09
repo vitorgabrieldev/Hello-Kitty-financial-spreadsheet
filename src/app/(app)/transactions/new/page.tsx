@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
-import type { Category, Account, Card, Debt } from '@/types'
+import type { Category, Account, Card, Debt, RecurrenceFrequency } from '@/types'
 
 // ── ATM-style currency input ──────────────────────────────────────────────────
 function CurrencyInput({ value, onChange }: { value?: number; onChange?: (v: number) => void }) {
@@ -186,6 +186,30 @@ function formatDateDisplay(iso: string) {
   return `${d}/${m}/${y}`
 }
 
+function addFrequency(dateStr: string, freq: RecurrenceFrequency): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  let date: Date
+  switch (freq) {
+    case 'weekly':    date = new Date(y, m - 1, d + 7); break
+    case 'biweekly':  date = new Date(y, m - 1, d + 14); break
+    case 'monthly':   date = new Date(y, m, d); break
+    case 'bimonthly': date = new Date(y, m + 1, d); break
+    case 'quarterly': date = new Date(y, m + 2, d); break
+    case 'yearly':    date = new Date(y + 1, m - 1, d); break
+    default:          date = new Date(y, m, d)
+  }
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+const RECURRENCE_OPTIONS: { value: RecurrenceFrequency; label: string }[] = [
+  { value: 'weekly',    label: 'Semanal' },
+  { value: 'biweekly',  label: 'Quinzenal' },
+  { value: 'monthly',   label: 'Mensal' },
+  { value: 'bimonthly', label: 'Bimestral' },
+  { value: 'quarterly', label: 'Trimestral' },
+  { value: 'yearly',    label: 'Anual' },
+]
+
 type TxType = 'expense' | 'income' | 'debt_payment'
 
 const TYPE_OPTIONS: { value: TxType; label: string; color: string }[] = [
@@ -211,6 +235,11 @@ export default function NewTransactionPage() {
   const [installmentTotal, setInstallmentTotal] = useState<number | null>(null)
   const [isInstallment, setIsInstallment] = useState(false)
 
+  const [isPaid, setIsPaid] = useState(false)
+  const [paidAt, setPaidAt] = useState('')
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<RecurrenceFrequency>('monthly')
+
   const [categories, setCategories] = useState<Category[]>([])
   const [accounts, setAccounts] = useState<Account[]>([])
   const [cards, setCards] = useState<Card[]>([])
@@ -218,7 +247,7 @@ export default function NewTransactionPage() {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const [picker, setPicker] = useState<'category' | 'account' | 'card' | 'installments' | 'date' | 'debt' | null>(null)
+  const [picker, setPicker] = useState<'category' | 'account' | 'card' | 'installments' | 'date' | 'paid_at' | 'debt' | 'recurrence' | null>(null)
 
   useEffect(() => { loadData() }, [])
 
@@ -276,6 +305,7 @@ export default function NewTransactionPage() {
           is_installment: false,
           is_recurring: false,
           is_paid: true,
+          paid_at: date,
           notes: notes.trim() || null,
         })
         if (txError) throw txError
@@ -293,6 +323,7 @@ export default function NewTransactionPage() {
           message.success('Pagamento registrado! 🎀')
         }
       } else {
+        const resolvedIsPaid = type === 'income' ? true : isPaid
         const payload = {
           user_id: user.id,
           type,
@@ -306,8 +337,11 @@ export default function NewTransactionPage() {
           installment_total: isInstallment ? installmentTotal : null,
           installment_current: isInstallment ? 1 : null,
           notes: notes.trim() || null,
-          is_paid: type === 'income' ? true : !cardId,
-          is_recurring: false,
+          is_paid: resolvedIsPaid,
+          paid_at: resolvedIsPaid ? (paidAt || date) : null,
+          is_recurring: isRecurring,
+          recurrence_frequency: isRecurring ? recurrenceFrequency : null,
+          recurrence_next_date: isRecurring ? addFrequency(date, recurrenceFrequency) : null,
         }
 
         if (isInstallment && installmentTotal && installmentTotal > 1) {
@@ -355,6 +389,11 @@ export default function NewTransactionPage() {
     setIsInstallment(false)
     setInstallmentTotal(null)
     setErrors({})
+    // receita sempre é "paga"
+    if (t === 'income') { setIsPaid(true); setPaidAt('') }
+    else { setIsPaid(false); setPaidAt('') }
+    setIsRecurring(false)
+    setRecurrenceFrequency('monthly')
   }
 
   const filteredCategories = categories.filter(c => {
@@ -602,6 +641,84 @@ export default function NewTransactionPage() {
               </Field>
             )}
 
+            {/* Toggle pago / não pago — só para gastos */}
+            {type === 'expense' && (
+              <div style={{ background: 'rgba(255,107,157,0.06)', border: '1px solid #FFE8F1', borderRadius: 14, padding: 14, marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#3d1a2e', margin: 0 }}>Já foi pago?</p>
+                    <p style={{ fontSize: 12, color: '#8B6B7A', margin: '2px 0 0' }}>
+                      {isPaid ? 'Pago — saiu da conta' : 'Pendente — ainda vou pagar'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setIsPaid(p => !p); setPaidAt('') }}
+                    style={{
+                      width: 48, height: 28, borderRadius: 99, border: 'none', cursor: 'pointer',
+                      background: isPaid ? '#4CAF82' : '#e0e0e0',
+                      position: 'relative', transition: 'background 0.2s ease', flexShrink: 0,
+                    }}
+                  >
+                    <span style={{
+                      position: 'absolute', top: 3, width: 22, height: 22, borderRadius: '50%',
+                      background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      transition: 'left 0.2s ease', left: isPaid ? 23 : 3,
+                    }} />
+                  </button>
+                </div>
+                {isPaid && (
+                  <div style={{ marginTop: 14 }}>
+                    <Field label="Data do pagamento">
+                      <PickerButton
+                        label={paidAt ? formatDateDisplay(paidAt) : undefined}
+                        placeholder={`Hoje (${formatDateDisplay(date)})`}
+                        onOpen={() => setPicker('paid_at')}
+                      />
+                    </Field>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Recorrência — só para não-parcelado */}
+            {!isInstallment && (
+              <div style={{ background: 'rgba(255,107,157,0.06)', border: '1px solid #FFE8F1', borderRadius: 14, padding: 14, marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: '#3d1a2e', margin: 0 }}>Lançamento recorrente?</p>
+                    <p style={{ fontSize: 12, color: '#8B6B7A', margin: '2px 0 0' }}>Repete automaticamente todo mês</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsRecurring(p => !p)}
+                    style={{
+                      width: 48, height: 28, borderRadius: 99, border: 'none', cursor: 'pointer',
+                      background: isRecurring ? '#FF6B9D' : '#e0e0e0',
+                      position: 'relative', transition: 'background 0.2s ease', flexShrink: 0,
+                    }}
+                  >
+                    <span style={{
+                      position: 'absolute', top: 3, width: 22, height: 22, borderRadius: '50%',
+                      background: 'white', boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      transition: 'left 0.2s ease', left: isRecurring ? 23 : 3,
+                    }} />
+                  </button>
+                </div>
+                {isRecurring && (
+                  <div style={{ marginTop: 14 }}>
+                    <Field label="Frequência">
+                      <PickerButton
+                        label={RECURRENCE_OPTIONS.find(o => o.value === recurrenceFrequency)?.label}
+                        placeholder="Selecione..."
+                        onOpen={() => setPicker('recurrence')}
+                      />
+                    </Field>
+                  </div>
+                )}
+              </div>
+            )}
+
             <Field label="Observações (opcional)">
               <StyledTextarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Anotações extras..." />
             </Field>
@@ -694,6 +811,31 @@ export default function NewTransactionPage() {
           <div style={{ padding: 20 }}>
             <input type="date" value={date}
               onChange={e => { setDate(e.target.value); setErrors(p => ({ ...p, date: '' })); setPicker(null) }}
+              style={{
+                width: '100%', height: 46, padding: '0 14px',
+                border: '1px solid #d9d9d9', borderRadius: 8,
+                fontSize: 15, fontWeight: 600, color: '#3d1a2e',
+                background: 'white', outline: 'none', WebkitAppearance: 'none',
+              }}
+            />
+          </div>
+        </PickerOverlay>
+      )}
+
+      {picker === 'recurrence' && (
+        <PickerOverlay title="Frequência de repetição" onClose={() => setPicker(null)}>
+          {RECURRENCE_OPTIONS.map(o => (
+            <PickerItem key={o.value} label={o.label} selected={recurrenceFrequency === o.value}
+              onClick={() => { setRecurrenceFrequency(o.value); setPicker(null) }} />
+          ))}
+        </PickerOverlay>
+      )}
+
+      {picker === 'paid_at' && (
+        <PickerOverlay title="Data do pagamento" onClose={() => setPicker(null)}>
+          <div style={{ padding: 20 }}>
+            <input type="date" defaultValue={paidAt || todayISO()}
+              onChange={e => { setPaidAt(e.target.value); setPicker(null) }}
               style={{
                 width: '100%', height: 46, padding: '0 14px',
                 border: '1px solid #d9d9d9', borderRadius: 8,
