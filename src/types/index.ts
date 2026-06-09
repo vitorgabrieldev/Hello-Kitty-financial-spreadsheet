@@ -1,4 +1,22 @@
-export type TransactionType = 'income' | 'expense'
+export type TransactionType = 'income' | 'expense' | 'debt_payment'
+export type DebtStatus = 'active' | 'paid'
+
+export interface Debt {
+  id: string
+  user_id: string
+  name: string
+  creditor: string
+  total_amount: number
+  paid_amount: number
+  installment_total?: number
+  installment_amount?: number
+  due_date?: string
+  color: string
+  status: DebtStatus
+  notes?: string
+  created_at: string
+  updated_at: string
+}
 export type AccountType = 'checking' | 'savings' | 'investment' | 'cash'
 export type CardBrand = 'visa' | 'mastercard' | 'elo' | 'amex' | 'hipercard' | 'other'
 
@@ -80,6 +98,7 @@ export interface Transaction {
   installment_group_id?: string
   is_recurring: boolean
   is_paid: boolean
+  debt_id?: string
   notes?: string
   created_at: string
   updated_at: string

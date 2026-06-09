@@ -3,15 +3,15 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { LayoutDashboard, Wallet, Tag, Settings, Plus } from 'lucide-react'
+import { LayoutDashboard, Wallet, Settings, Plus, TrendingDown } from 'lucide-react'
 import { useNavigation } from '@/lib/navigation-context'
 
 const navItems = [
-  { href: '/dashboard',    icon: LayoutDashboard, label: 'Início' },
-  { href: '/accounts',     icon: Wallet,           label: 'Contas' },
-  { href: '/transactions/new', icon: Plus,         label: 'Novo', center: true },
-  { href: '/categories',   icon: Tag,              label: 'Categorias' },
-  { href: '/settings',     icon: Settings,         label: 'Config' },
+  { href: '/dashboard',        icon: LayoutDashboard, label: 'Início' },
+  { href: '/accounts',         icon: Wallet,          label: 'Contas' },
+  { href: '/transactions/new', icon: Plus,            label: 'Novo', center: true },
+  { href: '/debts',            icon: TrendingDown,    label: 'Dívidas' },
+  { href: '/settings',         icon: Settings,        label: 'Config' },
 ]
 
 export default function BottomNav() {

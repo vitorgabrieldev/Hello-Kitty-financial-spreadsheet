@@ -153,8 +153,7 @@ export default function SettingsPage() {
   }
 
   const menuItems = [
-    { icon: '🔒', label: 'Privacidade',    sub: 'Seus dados são privados e seguros',  onClick: () => message.info('Em breve!') },
-    { icon: '🎨', label: 'Personalização', sub: 'Temas e preferências visuais',        onClick: () => message.info('Em breve!') },
+    { icon: '🏷️', label: 'Categorias', sub: 'Gerencie as categorias de gastos', onClick: () => router.push('/categories') },
   ]
 
   return (
