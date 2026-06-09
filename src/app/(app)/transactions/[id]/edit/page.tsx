@@ -279,6 +279,8 @@ export default function EditTransactionPage() {
     try {
       const supabase = createClient()
       const resolvedIsPaid = original?.type === 'income' ? true : isPaid
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
       const { error } = await supabase
         .from('transactions')
         .update({
@@ -295,6 +297,7 @@ export default function EditTransactionPage() {
           recurrence_frequency: isRecurring ? recurrenceFrequency : null,
         })
         .eq('id', id)
+        .eq('user_id', user.id)
       if (error) throw error
       message.success('Lançamento atualizado 🎀')
       router.push('/transactions')
@@ -312,10 +315,13 @@ export default function EditTransactionPage() {
       const supabase = createClient()
       const today = new Date()
       const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
       const { error } = await supabase
         .from('transactions')
         .update({ is_paid: true, paid_at: todayStr })
         .eq('installment_group_id', original.installment_group_id)
+        .eq('user_id', user.id)
         .eq('is_paid', false)
       if (error) throw error
       message.success('Todas as parcelas marcadas como pagas 🎀')

@@ -32,11 +32,11 @@ export default function QuickAddFab() {
         style={{
           width: 44, height: 44, borderRadius: '50%',
           background: open
-            ? 'linear-gradient(135deg, #3d1a2e, #6B2D4E)'
-            : 'linear-gradient(135deg, #FF6B9D, #FF4D8D)',
+            ? 'linear-gradient(135deg, var(--dark), color-mix(in srgb, var(--dark) 60%, var(--primary)))'
+            : 'linear-gradient(135deg, var(--primary), var(--primary-hover))',
           border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 16px rgba(255, 107, 157, 0.45)',
+          boxShadow: '0 4px 16px color-mix(in srgb, var(--primary) 45%, transparent)',
           transition: 'all 0.2s cubic-bezier(0.34,1.56,0.64,1)',
           transform: open ? 'rotate(45deg) scale(1.05)' : 'rotate(0deg) scale(1)',
           flexShrink: 0,
@@ -55,7 +55,7 @@ export default function QuickAddFab() {
             onClick={() => setOpen(false)}
             style={{
               position: 'fixed', inset: 0,
-              background: 'rgba(61,26,46,0.22)',
+              background: 'color-mix(in srgb, var(--dark) 22%, transparent)',
               backdropFilter: 'blur(3px)',
               WebkitBackdropFilter: 'blur(3px)',
               zIndex: 48,
@@ -84,8 +84,8 @@ export default function QuickAddFab() {
                   display: 'flex', alignItems: 'center', gap: 12,
                   background: 'white', border: 'none', borderRadius: 50,
                   padding: '12px 20px', cursor: 'pointer',
-                  boxShadow: '0 4px 20px rgba(61,26,46,0.18)',
-                  fontSize: 15, fontWeight: 700, color: '#3d1a2e',
+                  boxShadow: '0 4px 20px color-mix(in srgb, var(--dark) 18%, transparent)',
+                  fontSize: 15, fontWeight: 700, color: 'var(--dark)',
                   transition: 'transform 0.15s ease',
                   minWidth: 180,
                   animation: `fabIn 0.22s cubic-bezier(0.34,1.56,0.64,1) ${i * 0.05}s both`,

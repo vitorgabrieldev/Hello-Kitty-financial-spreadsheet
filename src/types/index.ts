@@ -105,6 +105,7 @@ export interface Transaction {
   is_paid: boolean
   paid_at?: string
   debt_id?: string
+  transfer_peer_id?: string
   notes?: string
   created_at: string
   updated_at: string
@@ -133,7 +134,7 @@ export interface Notification {
   type: 'due_soon' | 'overdue' | 'info' | 'success'
   is_read: boolean
   reference_id?: string
-  reference_type?: 'card' | 'transaction' | 'installment'
+  reference_type?: 'card' | 'transaction' | 'installment' | 'debt'
   scheduled_for?: string
   created_at: string
 }

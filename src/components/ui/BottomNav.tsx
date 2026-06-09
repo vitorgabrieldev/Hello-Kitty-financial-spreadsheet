@@ -21,7 +21,7 @@ export default function BottomNav() {
   const [visualActive, setVisualActive] = useState<string | null>(null)
 
   useEffect(() => {
-    const active = (navItems as Array<{ href?: string; center?: boolean }>).find(
+    const active = (navItems as unknown as Array<{ href?: string; center?: boolean }>).find(
       (item) => item.href && (pathname === item.href || pathname.startsWith(item.href + '/'))
     )
     setVisualActive((active as { href?: string })?.href ?? null)
@@ -34,12 +34,12 @@ export default function BottomNav() {
         background: 'rgba(255, 255, 255, 0.92)',
         backdropFilter: 'blur(24px)',
         WebkitBackdropFilter: 'blur(24px)',
-        borderTop: '1px solid rgba(255, 107, 157, 0.12)',
-        boxShadow: '0 -4px 32px rgba(255, 107, 157, 0.08)',
+        borderTop: '1px solid color-mix(in srgb, var(--primary) 12%, transparent)',
+        boxShadow: '0 -4px 32px color-mix(in srgb, var(--primary) 8%, transparent)',
       }}
     >
       <div className="flex items-center justify-around px-2 py-2 max-w-lg mx-auto">
-        {navItems.map((item, idx) => {
+        {navItems.map((item) => {
           if ('center' in item && item.center) {
             return (
               <div key="fab-center" style={{ minWidth: 52, display: 'flex', justifyContent: 'center' }}>
@@ -62,7 +62,7 @@ export default function BottomNav() {
               <div
                 style={{
                   position: 'absolute', inset: 0, borderRadius: 16,
-                  background: 'rgba(255, 107, 157, 0.1)',
+                  background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
                   clipPath: isActive
                     ? 'inset(0% 0% 0% 0% round 16px)'
                     : 'inset(0% 0% 100% 0% round 16px)',
@@ -72,12 +72,12 @@ export default function BottomNav() {
               <Icon
                 size={22}
                 strokeWidth={isActive ? 2.2 : 1.8}
-                style={{ color: isActive ? '#FF6B9D' : '#C4A0B0', transition: 'color 0.25s ease', position: 'relative' }}
+                style={{ color: isActive ? 'var(--primary)' : 'var(--primary-light)', transition: 'color 0.25s ease', position: 'relative' }}
               />
               <span
                 style={{
                   fontSize: 10, fontWeight: isActive ? 700 : 400,
-                  color: isActive ? '#FF6B9D' : '#C4A0B0',
+                  color: isActive ? 'var(--primary)' : 'var(--primary-light)',
                   transition: 'color 0.25s ease', position: 'relative', lineHeight: 1,
                 }}
               >

@@ -74,7 +74,8 @@ export default function CardsPage() {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
-        await supabase.from('cards').delete().eq('id', card.id).eq('user_id', user.id)
+        const { error } = await supabase.from('cards').delete().eq('id', card.id).eq('user_id', user.id)
+        if (error) { message.error('Erro ao excluir cartão'); return }
         message.success('Cartão excluído')
         load()
       },

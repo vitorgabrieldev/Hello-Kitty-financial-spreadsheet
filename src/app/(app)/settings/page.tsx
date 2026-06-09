@@ -6,6 +6,8 @@ import { LogOut, User, ChevronRight, Pencil, MapPin, Camera } from 'lucide-react
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/types'
+import { useTheme } from '@/lib/theme-context'
+import { THEMES, type ThemeId } from '@/lib/themes'
 
 const MARITAL_OPTIONS = [
   { value: 'single',   label: 'Solteiro(a)' },
@@ -35,7 +37,7 @@ function StyledInput({ value, onChange, placeholder, type = 'text' }: {
         width: '100%', height: 46, padding: '0 14px',
         border: '1px solid #d9d9d9', borderRadius: 8,
         fontSize: 15, fontWeight: 600, color: '#3d1a2e', letterSpacing: 0.5,
-        background: 'white', outline: 'none', caretColor: '#FF6B9D',
+        background: 'white', outline: 'none', caretColor: 'var(--primary)',
         transition: 'border-color 0.2s', WebkitAppearance: 'none',
       }}
     />
@@ -61,7 +63,7 @@ function StyledTextarea({ value, onChange, placeholder }: {
         width: '100%', padding: '10px 14px',
         border: '1px solid #d9d9d9', borderRadius: 8,
         fontSize: 15, fontWeight: 600, color: '#3d1a2e',
-        background: 'white', outline: 'none', caretColor: '#FF6B9D',
+        background: 'white', outline: 'none', caretColor: 'var(--primary)',
         resize: 'none', fontFamily: 'inherit', letterSpacing: 0.5,
         transition: 'border-color 0.2s', WebkitAppearance: 'none',
       }}
@@ -79,6 +81,7 @@ export default function SettingsPage() {
   const [form] = Form.useForm()
   const { modal, message } = App.useApp()
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => { load() }, [])
 
@@ -204,26 +207,47 @@ export default function SettingsPage() {
     <div className="page-enter">
       {/* Header */}
       <div className="hk-gradient px-4 pt-12 pb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 text-8xl opacity-10" style={{ transform: 'translate(10%, -10%)' }}>🎀</div>
+        <div className="absolute top-0 right-0 text-8xl opacity-10" style={{ transform: 'translate(10%, -10%)' }}>{theme.emoji}</div>
         <div className="flex items-center gap-4 relative">
           <div style={{ position: 'relative' }}>
             <Avatar
               size={64}
               src={profile?.avatar_url}
-              style={{ background: 'rgba(255,255,255,0.3)', border: '3px solid rgba(255,255,255,0.6)' }}
+              style={{
+                background: 'rgba(255,255,255,0.3)',
+                border: '3px solid rgba(255,255,255,0.6)',
+                opacity: loadingAvatar ? 0.5 : 1,
+                transition: 'opacity 0.2s',
+              }}
               icon={<User size={28} />}
             />
+            {loadingAvatar && (
+              <div style={{
+                position: 'absolute', inset: 0, borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'rgba(255,107,157,0.25)',
+              }}>
+                <div className="animate-spin" style={{
+                  width: 22, height: 22, borderRadius: '50%',
+                  border: '2.5px solid rgba(255,255,255,0.35)',
+                  borderTopColor: 'white',
+                }} />
+              </div>
+            )}
             <label
               style={{
                 position: 'absolute', bottom: -2, right: -2,
                 width: 22, height: 22, borderRadius: '50%',
-                background: loadingAvatar ? '#FFB3D1' : 'white',
-                border: '2px solid #FF6B9D',
+                background: loadingAvatar ? 'var(--primary-light)' : 'white',
+                border: '2px solid var(--primary)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor: loadingAvatar ? 'not-allowed' : 'pointer', padding: 0,
               }}
             >
-              <Camera size={11} style={{ color: '#FF6B9D' }} />
+              {loadingAvatar
+                ? <div className="animate-spin" style={{ width: 10, height: 10, borderRadius: '50%', border: '1.5px solid var(--primary-light)', borderTopColor: 'var(--primary)' }} />
+                : <Camera size={11} style={{ color: 'var(--primary)' }} />
+              }
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -252,14 +276,51 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-4 py-4 flex flex-col gap-3">
-        <div className="rounded-2xl overflow-hidden bg-white" style={{ border: '1px solid #FFE8F1' }}>
+
+        {/* Theme picker */}
+        <div className="rounded-2xl bg-white p-4" style={{ border: '1px solid var(--border-light)' }}>
+          <p className="text-xs font-semibold mb-3" style={{ color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tema</p>
+          <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {THEMES.map(t => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTheme(t.id as ThemeId)}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                  minWidth: 52, padding: '8px 4px', borderRadius: 14, border: 'none',
+                  background: theme.id === t.id ? 'var(--primary-pale)' : 'transparent',
+                  cursor: 'pointer', transition: 'all 0.15s ease', flexShrink: 0,
+                  outline: theme.id === t.id ? '2px solid var(--primary)' : '2px solid transparent',
+                  outlineOffset: 1,
+                }}
+              >
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  background: t.vars['--primary'],
+                  boxShadow: theme.id === t.id ? `0 0 0 3px white, 0 0 0 5px ${t.vars['--primary']}` : '0 2px 6px rgba(0,0,0,0.15)',
+                  transition: 'box-shadow 0.15s ease',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 18,
+                }}>
+                  {theme.id === t.id ? '✓' : ''}
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 600, color: theme.id === t.id ? 'var(--primary)' : 'var(--gray)', whiteSpace: 'nowrap' }}>
+                  {t.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl overflow-hidden bg-white" style={{ border: '1px solid var(--border-light)' }}>
           {menuItems.map((item, i) => (
             <button
               key={i}
               onClick={item.onClick}
               className="w-full flex items-center gap-3 px-4 py-4 text-left hk-card-hover"
               style={{
-                borderBottom: i < menuItems.length - 1 ? '1px solid #FFE8F1' : 'none',
+                borderBottom: i < menuItems.length - 1 ? '1px solid var(--border-light)' : 'none',
                 background: 'none', cursor: 'pointer',
               }}
             >
@@ -293,7 +354,7 @@ export default function SettingsPage() {
           onClose={() => setDrawerOpen(false)}
           styles={{
             content: { borderRadius: '24px 24px 0 0' },
-            header: { borderRadius: '24px 24px 0 0', borderBottom: '1px solid #FFE8F1', padding: '16px 20px' },
+            header: { borderRadius: '24px 24px 0 0', borderBottom: '1px solid var(--border-light)', padding: '16px 20px' },
             body: { padding: '16px 20px', overflowY: 'auto', maxHeight: '85dvh', paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 24px)' },
           }}
           extra={<Button type="primary" shape="round" onClick={handleSaveProfile}>Salvar</Button>}
@@ -321,8 +382,8 @@ export default function SettingsPage() {
                   onClick={() => setMaritalStatus(v => v === opt.value ? '' : opt.value)}
                   style={{
                     height: 34, padding: '0 14px', borderRadius: 20,
-                    background: maritalStatus === opt.value ? '#FF6B9D' : '#FFE8F1',
-                    color:      maritalStatus === opt.value ? 'white'    : '#8B6B7A',
+                    background: maritalStatus === opt.value ? 'var(--primary)' : 'var(--primary-pale)',
+                    color:      maritalStatus === opt.value ? 'white' : 'var(--gray)',
                     border: 'none', cursor: 'pointer',
                     fontSize: 12, fontWeight: 600,
                     transition: 'all 0.15s ease',
@@ -336,8 +397,8 @@ export default function SettingsPage() {
 
           {/* Endereço */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-            <MapPin size={14} style={{ color: '#FF6B9D' }} />
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#FF6B9D', margin: 0 }}>Endereço</p>
+            <MapPin size={14} style={{ color: 'var(--primary)' }} />
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)', margin: 0 }}>Endereço</p>
           </div>
 
           <Form.Item
@@ -359,7 +420,7 @@ export default function SettingsPage() {
                 border: '1px solid #d9d9d9', borderRadius: 8,
                 fontSize: 15, fontWeight: 600, color: '#3d1a2e',
                 background: loadingCep ? '#FFF5F7' : 'white',
-                outline: 'none', caretColor: '#FF6B9D',
+                outline: 'none', caretColor: 'var(--primary)',
                 transition: 'background 0.2s', WebkitAppearance: 'none',
               }}
             />

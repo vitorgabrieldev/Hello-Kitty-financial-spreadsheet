@@ -1,16 +1,21 @@
 @import "tailwindcss";
 
+/* ─── Design tokens (defaults = hello-kitty, overridden by ThemeProvider JS) ─── */
 :root {
-  --hk-pink: #FF6B9D;
-  --hk-pink-light: #FFB3CE;
-  --hk-pink-pale: #FFE8F1;
-  --hk-cream: #FFF5F7;
-  --hk-dark: #3d1a2e;
-  --hk-gray: #8B6B7A;
-  --hk-white: #FFFFFF;
-  --hk-green: #4CAF82;
-  --hk-red: #FF6B6B;
-  --hk-yellow: #FFD166;
+  --primary:        #FF6B9D;
+  --primary-hover:  #FF4D8D;
+  --primary-active: #E5006B;
+  --primary-light:  #FFB3CE;
+  --primary-pale:   #FFE8F1;
+  --cream:          #FFF5F7;
+  --dark:           #3d1a2e;
+  --gray:           #8B6B7A;
+  --border:         #FFD6E7;
+  --border-light:   #FFE8F1;
+  /* Semantic — same for all themes */
+  --green:  #4CAF82;
+  --red:    #FF6B6B;
+  --yellow: #FFD166;
 }
 
 * {
@@ -22,16 +27,21 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  color: var(--hk-dark);
+  color: var(--dark);
   font-family: 'Inter', 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Mobile: imagem cobrindo toda a tela */
+/* ─── Body backgrounds ─── */
+/* hello-kitty: image-based */
+[data-theme="hello-kitty"] body,
+:root:not([data-theme]) body {
+  background-color: #f2c4b8;
+}
 @media (max-width: 767px) {
-  body {
-    background-color: #f2c4b8;
+  [data-theme="hello-kitty"] body,
+  :root:not([data-theme]) body {
     background-image: url('/image-1.jpg');
     background-size: cover;
     background-position: center center;
@@ -39,11 +49,9 @@ body {
     background-attachment: fixed;
   }
 }
-
-/* Desktop: wallpaper fixo */
 @media (min-width: 768px) {
-  body {
-    background-color: #f5ece9;
+  [data-theme="hello-kitty"] body,
+  :root:not([data-theme]) body {
     background-image: url('/background-wallpaper.png');
     background-size: cover;
     background-position: top center;
@@ -51,60 +59,67 @@ body {
   }
 }
 
-/* Mobile safe area */
+/* barbie */
+[data-theme="barbie"] body {
+  background: linear-gradient(145deg, #8B0057 0%, #E91E8C 100%) fixed;
+}
+
+/* moranguinho */
+[data-theme="moranguinho"] body {
+  background: linear-gradient(145deg, #8B1A28 0%, #E63946 100%) fixed;
+}
+
+/* roxo */
+[data-theme="roxo"] body {
+  background: linear-gradient(145deg, #1E0A3C 0%, #7C3AED 100%) fixed;
+}
+
+/* neutro */
+[data-theme="neutro"] body {
+  background: linear-gradient(145deg, #1E293B 0%, #475569 100%) fixed;
+}
+
+/* ─── Mobile safe area ─── */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-
-/* Bottom nav height */
 .pb-nav {
   padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 }
 
-/* Scrollbar customization */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: var(--hk-cream);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--hk-pink-light);
-  border-radius: 99px;
-}
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 99px; }
 
-/* Custom gradient backgrounds */
+/* ─── Gradients ─── */
 .hk-gradient {
-  background: linear-gradient(135deg, #FF6B9D 0%, #FF9EC4 50%, #FFB3CE 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
 }
 .hk-gradient-soft {
-  background: linear-gradient(160deg, #FFF5F7 0%, #FFE8F1 100%);
+  background: linear-gradient(160deg, var(--cream) 0%, var(--primary-pale) 100%);
 }
 
-
-/* Card hover animation */
+/* ─── Card hover ─── */
 .hk-card-hover {
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
   cursor: pointer;
 }
 .hk-card-hover:active {
   transform: scale(0.965);
-  box-shadow: 0 2px 8px rgba(255, 107, 157, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Nav tab press */
+/* ─── Nav tab ─── */
 .hk-nav-tab {
   transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease;
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
 }
-.hk-nav-tab:active {
-  transform: scale(0.88);
-}
+.hk-nav-tab:active { transform: scale(0.88); }
 
-/* Generic pressable (links, buttons) */
+/* ─── Pressable ─── */
 .hk-pressable {
   transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease;
   cursor: pointer;
@@ -114,31 +129,24 @@ body {
   opacity: 0.8;
 }
 
-/* Ant Design overrides */
+/* ─── Ant Design overrides ─── */
 .ant-btn-primary {
-  background: linear-gradient(135deg, #FF6B9D, #FF4D8D) !important;
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover)) !important;
   border: none !important;
 }
 .ant-btn-primary:hover {
-  background: linear-gradient(135deg, #FF4D8D, #E5006B) !important;
+  background: linear-gradient(135deg, var(--primary-hover), var(--primary-active)) !important;
 }
 
-/* Page transitions */
+/* ─── Page transitions ─── */
 .page-enter {
   animation: pageEnter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 @keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.995);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(10px) scale(0.995); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Fade in (para elementos individuais) */
 .fade-in {
   animation: fadeIn 0.22s ease both;
 }
@@ -147,16 +155,24 @@ body {
   to   { opacity: 1; }
 }
 
-/* Skeleton shimmer */
+/* ─── Skeleton ─── */
 .skeleton {
   border-radius: 8px;
-  background: linear-gradient(90deg, rgba(255,182,210,0.35) 25%, rgba(255,210,230,0.6) 50%, rgba(255,182,210,0.35) 75%);
+  background: linear-gradient(90deg,
+    rgba(var(--skeleton-r, 255), var(--skeleton-g, 182), var(--skeleton-b, 210), 0.35) 25%,
+    rgba(var(--skeleton-r, 255), var(--skeleton-g, 210), var(--skeleton-b, 230), 0.6) 50%,
+    rgba(var(--skeleton-r, 255), var(--skeleton-g, 182), var(--skeleton-b, 210), 0.35) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
 .skeleton-white {
   border-radius: 8px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.25) 25%, rgba(255,255,255,0.5) 50%, rgba(255,255,255,0.25) 75%);
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.25) 25%,
+    rgba(255,255,255,0.5) 50%,
+    rgba(255,255,255,0.25) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -165,48 +181,29 @@ body {
   100% { background-position: -200% 0; }
 }
 
-/* Currency positive/negative colors */
-.text-income {
-  color: var(--hk-green);
-}
-.text-expense {
-  color: var(--hk-red);
-}
+/* ─── Semantic text colors ─── */
+.text-income  { color: var(--green); }
+.text-expense { color: var(--red); }
 
+/* ─── Animations ─── */
 @keyframes fabIn {
-  from {
-    opacity: 0;
-    transform: scale(0.88);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
 }
-
-/* Login animations */
 @keyframes sheetUp {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes floatBow {
-  0%, 100% { transform: translateY(0px);   }
-  50%       { transform: translateY(-6px);  }
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
 }
-
 @keyframes btnShimmer {
   0%   { background-position: 200% center; }
   100% { background-position: -200% center; }
 }
 
-/* Login glass card — só no desktop */
+/* ─── Login glass card (desktop only) ─── */
 @media (min-width: 768px) {
   .login-glass {
     background: rgba(255, 255, 255, 0.65) !important;

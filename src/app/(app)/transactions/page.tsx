@@ -75,9 +75,9 @@ export default function TransactionsPage() {
 
     const [txRes, catRes, accRes, cardRes] = await Promise.all([
       query,
-      supabase.from('categories').select('id, name, icon').order('name'),
-      supabase.from('accounts').select('id, name').eq('user_id', user.id),
-      supabase.from('cards').select('id, name').eq('user_id', user.id),
+      supabase.from('categories').select('id, name, icon, color, type, is_default, created_at').order('name'),
+      supabase.from('accounts').select('*').eq('user_id', user.id),
+      supabase.from('cards').select('*').eq('user_id', user.id),
     ])
 
     setTransactions(txRes.data ?? [])

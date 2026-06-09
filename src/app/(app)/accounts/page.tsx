@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, getAccountTypeLabel } from '@/lib/utils'
 import PageHeader from '@/components/ui/PageHeader'
 import type { Account } from '@/types'
+import { useRouter } from 'next/navigation'
 
 const COLORS = ['#FF6B9D', '#FF9EC4', '#9B59B6', '#3498DB', '#2ECC71', '#F39C12', '#E74C3C', '#1ABC9C']
 
@@ -151,6 +152,7 @@ export default function AccountsPage() {
   const [typePicker, setTypePicker] = useState(false)
   const [form]                    = Form.useForm()
   const { message, modal }        = App.useApp()
+  const router                    = useRouter()
 
   const colorValue = Form.useWatch('color', form)
   const [selectedType, setSelectedType] = useState('')
@@ -211,7 +213,8 @@ export default function AccountsPage() {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
-        await supabase.from('accounts').delete().eq('id', account.id).eq('user_id', user.id)
+        const { error } = await supabase.from('accounts').delete().eq('id', account.id).eq('user_id', user.id)
+        if (error) { message.error('Erro ao excluir conta'); return }
         message.success('Conta excluída')
         load()
       },
@@ -262,7 +265,8 @@ export default function AccountsPage() {
               <div
                 key={account.id}
                 className="hk-card-hover"
-                style={{ background: 'white', border: '1px solid #FFE8F1', borderRadius: 14, overflow: 'hidden' }}
+                onClick={() => router.push(`/accounts/${account.id}`)}
+                style={{ background: 'white', border: '1px solid var(--border-light)', borderRadius: 14, overflow: 'hidden' }}
               >
                 {/* color accent bar */}
                 <div style={{ height: 4, background: `linear-gradient(90deg, ${account.color}, ${account.color}55)` }} />
@@ -289,17 +293,17 @@ export default function AccountsPage() {
                     </div>
 
                     <div style={{ display: 'flex', gap: 2 }}>
-                      <button onClick={() => openEdit(account)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 8 }}>
-                        <Pencil size={15} style={{ color: '#C4A0B0' }} />
+                      <button onClick={e => { e.stopPropagation(); openEdit(account) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 8 }}>
+                        <Pencil size={15} style={{ color: 'var(--primary-light)' }} />
                       </button>
-                      <button onClick={() => handleDelete(account)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 8 }}>
+                      <button onClick={e => { e.stopPropagation(); handleDelete(account) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, borderRadius: 8 }}>
                         <Trash2 size={15} style={{ color: '#FFAAAA' }} />
                       </button>
                     </div>
                   </div>
 
                   {/* balance row */}
-                  <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #FFE8F1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: 11, fontWeight: 600, color: '#C4A0B0', letterSpacing: 0.8, textTransform: 'uppercase' }}>
                       Saldo
                     </span>

@@ -51,6 +51,7 @@ begin
 end;
 $$ language plpgsql;
 
+drop trigger if exists update_debts_updated_at on debts;
 create trigger update_debts_updated_at before update on debts
   for each row execute function update_updated_at();
 

@@ -56,11 +56,11 @@ export default function DashboardPage() {
   }
 
   const totalBalance   = accounts.reduce((s, a) => s + a.balance, 0)
-  // usa allMonthTx para cálculos precisos (sem limit)
+  // usa allMonthTx para cálculos precisos (sem limit) — exclui transfer (não é gasto real)
   const monthIncome    = allMonthTx.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0)
-  const monthExpense   = allMonthTx.filter(t => t.type !== 'income').reduce((s, t) => s + t.amount, 0)
-  const monthPaid      = allMonthTx.filter(t => t.type !== 'income' && t.is_paid).reduce((s, t) => s + t.amount, 0)
-  const monthPending   = allMonthTx.filter(t => t.type !== 'income' && !t.is_paid).reduce((s, t) => s + t.amount, 0)
+  const monthExpense   = allMonthTx.filter(t => t.type === 'expense' || t.type === 'debt_payment').reduce((s, t) => s + t.amount, 0)
+  const monthPaid      = allMonthTx.filter(t => (t.type === 'expense' || t.type === 'debt_payment') && t.is_paid).reduce((s, t) => s + t.amount, 0)
+  const monthPending   = allMonthTx.filter(t => (t.type === 'expense' || t.type === 'debt_payment') && !t.is_paid).reduce((s, t) => s + t.amount, 0)
   const monthBalance   = monthIncome - monthExpense
 
   if (loading) {
@@ -378,20 +378,22 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-3">
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
-                      style={{ background: tx.type === 'income' ? '#E8F7EF' : '#FFF0F0' }}
+                      style={{ background: tx.type === 'income' ? '#E8F7EF' : tx.type === 'transfer' ? '#EBF5FF' : '#FFF0F0' }}
                     >
-                      {tx.category?.icon ?? '✨'}
+                      {tx.type === 'transfer' ? '↔️' : (tx.category?.icon ?? '✨')}
                     </div>
                     <div>
                       <p className="font-semibold text-sm leading-tight" style={{ color: '#3d1a2e' }}>{tx.description}</p>
-                      <p className="text-xs" style={{ color: '#8B6B7A' }}>{formatDateShort(tx.date)} · {tx.category?.name}</p>
+                      <p className="text-xs" style={{ color: '#8B6B7A' }}>
+                        {formatDateShort(tx.date)} · {tx.type === 'transfer' ? 'Transferência' : tx.category?.name}
+                      </p>
                     </div>
                   </div>
                   <p
                     className="font-bold text-sm"
-                    style={{ color: tx.type === 'income' ? '#4CAF82' : '#FF6B6B' }}
+                    style={{ color: tx.type === 'income' ? '#4CAF82' : tx.type === 'transfer' ? '#3498DB' : '#FF6B6B' }}
                   >
-                    {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                    {tx.type === 'income' ? '+' : tx.type === 'transfer' ? '' : '-'}{formatCurrency(tx.amount)}
                   </p>
                 </div>
               ))}
