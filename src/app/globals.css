@@ -34,15 +34,20 @@ body {
 }
 
 /* ─── Body backgrounds ─── */
-/* hello-kitty: image-based */
+/* Fallback antes do JS carregar o tema */
+body {
+  background-color: #f2c4b8;
+}
+
+/* hello-kitty: imagens personalizadas */
 [data-theme="hello-kitty"] body,
 :root:not([data-theme]) body {
-  background-color: #f2c4b8;
+  background-color: #FFD6E7;
 }
 @media (max-width: 767px) {
   [data-theme="hello-kitty"] body,
   :root:not([data-theme]) body {
-    background-image: url('/image-1.jpg');
+    background-image: url('/themes/hello-kitty-mobile.jpg');
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -52,31 +57,52 @@ body {
 @media (min-width: 768px) {
   [data-theme="hello-kitty"] body,
   :root:not([data-theme]) body {
-    background-image: url('/background-wallpaper.png');
+    background-image: url('/themes/hello-kitty-desktop.jpg');
     background-size: cover;
     background-position: top center;
+    background-repeat: no-repeat;
     background-attachment: fixed;
   }
 }
 
 /* barbie */
 [data-theme="barbie"] body {
-  background: linear-gradient(145deg, #8B0057 0%, #E91E8C 100%) fixed;
+  background-color: #FCE4EC;
+  background-image: url('/themes/barbie.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* moranguinho */
 [data-theme="moranguinho"] body {
-  background: linear-gradient(145deg, #8B1A28 0%, #E63946 100%) fixed;
+  background-color: #FFEBEE;
+  background-image: url('/themes/moranguinho.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* roxo */
 [data-theme="roxo"] body {
-  background: linear-gradient(145deg, #1E0A3C 0%, #7C3AED 100%) fixed;
+  background-color: #EDE9FE;
+  background-image: url('/themes/roxo.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* neutro */
 [data-theme="neutro"] body {
-  background: linear-gradient(145deg, #1E293B 0%, #475569 100%) fixed;
+  background-color: #E2E8F0;
+  background-image: url('/themes/neutro.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* ─── Mobile safe area ─── */

@@ -7,7 +7,6 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/types'
 import { useTheme } from '@/lib/theme-context'
-import { THEMES, type ThemeId } from '@/lib/themes'
 
 const MARITAL_OPTIONS = [
   { value: 'single',   label: 'Solteiro(a)' },
@@ -81,7 +80,7 @@ export default function SettingsPage() {
   const [form] = Form.useForm()
   const { modal, message } = App.useApp()
   const router = useRouter()
-  const { theme, setTheme } = useTheme()
+  const { theme } = useTheme()
 
   useEffect(() => { load() }, [])
 
@@ -197,6 +196,7 @@ export default function SettingsPage() {
   }
 
   const menuItems = [
+    { icon: '🎨', label: 'Tema',        sub: 'Personalize a aparência do app',   onClick: () => router.push('/settings/theme') },
     { icon: '🏦', label: 'Contas',      sub: 'Gerencie suas contas bancárias',   onClick: () => router.push('/accounts') },
     { icon: '💳', label: 'Cartões',     sub: 'Gerencie seus cartões de crédito', onClick: () => router.push('/cards') },
     { icon: '🏷️', label: 'Categorias',  sub: 'Gerencie as categorias de gastos', onClick: () => router.push('/categories') },
@@ -276,42 +276,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-4 py-4 flex flex-col gap-3">
-
-        {/* Theme picker */}
-        <div className="rounded-2xl bg-white p-4" style={{ border: '1px solid var(--border-light)' }}>
-          <p className="text-xs font-semibold mb-3" style={{ color: 'var(--gray)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tema</p>
-          <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-            {THEMES.map(t => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTheme(t.id as ThemeId)}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                  minWidth: 52, padding: '8px 4px', borderRadius: 14, border: 'none',
-                  background: theme.id === t.id ? 'var(--primary-pale)' : 'transparent',
-                  cursor: 'pointer', transition: 'all 0.15s ease', flexShrink: 0,
-                  outline: theme.id === t.id ? '2px solid var(--primary)' : '2px solid transparent',
-                  outlineOffset: 1,
-                }}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: t.vars['--primary'],
-                  boxShadow: theme.id === t.id ? `0 0 0 3px white, 0 0 0 5px ${t.vars['--primary']}` : '0 2px 6px rgba(0,0,0,0.15)',
-                  transition: 'box-shadow 0.15s ease',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 18,
-                }}>
-                  {theme.id === t.id ? '✓' : ''}
-                </div>
-                <span style={{ fontSize: 10, fontWeight: 600, color: theme.id === t.id ? 'var(--primary)' : 'var(--gray)', whiteSpace: 'nowrap' }}>
-                  {t.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
 
         <div className="rounded-2xl overflow-hidden bg-white" style={{ border: '1px solid var(--border-light)' }}>
           {menuItems.map((item, i) => (
