@@ -1,4 +1,4 @@
-export type TransactionType = 'income' | 'expense' | 'debt_payment'
+export type TransactionType = 'income' | 'expense' | 'debt_payment' | 'transfer'
 export type DebtStatus = 'active' | 'paid'
 
 export interface Debt {
